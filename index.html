@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body style="margin:0">
+<title>Tilbudsstudio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700&family=Albert+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Koncept: "Nordlys". Mørkt lærred, levende rødt nordlys bag toppen, totalen som kæmpetal.
+   Glaspaneler til venstre, mailen som et hvidt ark til højre. Bevidst ét mørkt tema. */
+:root{
+  color-scheme:dark;
+  --bg:#0B0506; --bg-2:#120809; --panel:rgba(255,255,255,.035); --panel-2:rgba(255,255,255,.06); --edge:rgba(255,255,255,.09); --edge-2:rgba(255,255,255,.16);
+  --ink:#F7F2F2; --muted:#B3A4A6; --dim:#7A6A6C;
+  --red:#ED0812; --red-hi:#FF3B44; --red-glow:rgba(237,8,18,.45); --maroon:#470205; --paper:#FFFFFF;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f:"Albert Sans","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:14px;line-height:1.45;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--red-hi);outline-offset:2px}
+.gut{max-width:1320px;margin:0 auto;padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px))}
+@media (max-width:560px){.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}}
+
+/* nordlys */
+.sky{position:absolute;inset:0 0 auto 0;height:640px;overflow:hidden;pointer-events:none;z-index:0}
+.sky canvas{width:100%;height:100%;display:block;filter:blur(28px) saturate(1.2);opacity:.95}
+.sky::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,5,6,0) 30%,var(--bg) 96%)}
+.grain{position:absolute;inset:0 0 auto 0;height:640px;pointer-events:none;z-index:0;opacity:.35;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:3px 3px;mask-image:linear-gradient(180deg,#000,transparent)}
+.stage{position:relative;z-index:1}
+
+/* nav */
+.nav{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-block:22px}
+.mark{display:flex;align-items:center;gap:12px;font-weight:600;letter-spacing:.01em}
+.mark i{width:28px;height:28px;border-radius:8px;background:var(--red);display:grid;place-items:center;font-style:normal;font-family:var(--display);font-size:13px;box-shadow:0 0 24px var(--red-glow)}
+.mark span{color:var(--muted);font-weight:500}
+@media (max-width:560px){.mark span{display:none}.pill{padding:8px 12px;white-space:nowrap}}
+.nav-a{display:flex;gap:8px}
+.pill{background:rgba(255,255,255,.06);border:1px solid var(--edge);color:var(--ink);border-radius:999px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(10px)}
+.pill:hover{border-color:var(--edge-2);background:rgba(255,255,255,.1)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:28px 48px;align-items:end;padding-block:36px 44px}
+@media (max-width:980px){.hero{grid-template-columns:1fr}}
+.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--red-hi);font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:24px;height:1px;background:var(--red-hi)}
+.hero h1{margin:0;font-family:var(--display);font-weight:500;font-size:clamp(30px,4.6vw,58px);line-height:1.02;letter-spacing:-.035em;text-wrap:balance}
+.hero h1 em{font-style:normal;background:linear-gradient(92deg,#fff 0%,#FFB3B7 55%,var(--red-hi) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.total{justify-self:end;text-align:right}
+@media (max-width:980px){.total{justify-self:start;text-align:left}}
+.total small{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.total .big{font-family:var(--display);font-weight:600;font-size:clamp(46px,7vw,92px);line-height:1;letter-spacing:-.04em;margin:8px 0 4px;text-shadow:0 0 60px rgba(237,8,18,.35)}
+.total .big > span:not(.od){font-size:.32em;letter-spacing:0;color:var(--muted);font-weight:500;margin-left:6px}
+.stats{display:flex;gap:28px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}
+@media (max-width:980px){.stats{justify-content:flex-start}}
+.stat{display:grid;gap:2px;text-align:left;padding-left:14px;border-left:1px solid var(--edge-2)}
+.stat small{font-size:11px;letter-spacing:.1em}
+.stat b{font-family:var(--display);font-weight:500;font-size:18px;letter-spacing:-.02em}
+.stat.int b{color:#FFB3B7}
+
+/* layout */
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,540px);gap:28px;align-items:start;padding-bottom:72px}
+@media (max-width:1080px){.wrap{grid-template-columns:minmax(0,1fr)}}
+.left{display:grid;gap:18px;min-width:0}
+.panel{background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.02));border:1px solid var(--edge);border-radius:20px;padding:24px;backdrop-filter:blur(14px);min-width:0}
+@media (max-width:560px){.panel{padding:18px;border-radius:16px}}
+.ph{display:flex;align-items:baseline;gap:14px;margin:0 0 18px}
+.ph b{font-family:var(--display);font-weight:500;font-size:12px;color:var(--red-hi);letter-spacing:.06em}
+.ph h2{margin:0;font-family:var(--display);font-weight:500;font-size:18px;letter-spacing:-.02em}
+.ph span{margin-left:auto;color:var(--dim);font-size:12px}
+
+.cust{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:560px){.cust{grid-template-columns:1fr}}
+div.f>.seg{justify-self:start;max-width:100%}
+label.f,div.f{display:grid;gap:8px;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.f input{background:rgba(0,0,0,.25);border:1px solid var(--edge);border-radius:12px;padding:13px 14px;font-size:16px;font-weight:500;color:var(--ink);width:100%;min-width:0}
+.f input::placeholder{color:var(--dim)}
+.f input:focus{border-color:var(--red);outline:none;box-shadow:0 0 0 4px rgba(237,8,18,.18)}
+
+.seg{display:inline-flex;flex-wrap:wrap;background:rgba(0,0,0,.28);border:1px solid var(--edge);border-radius:12px;padding:3px;gap:2px}
+.seg button{border:0;background:none;border-radius:9px;padding:8px 13px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted)}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--red);color:#fff;box-shadow:0 6px 18px -6px var(--red-glow)}
+
+/* produkter */
+.sub-h{display:flex;align-items:center;gap:12px;font-size:11px;font-weight:700;color:var(--dim);letter-spacing:.16em;text-transform:uppercase;margin:22px 0 12px}
+.sub-h::after{content:"";flex:1;height:1px;background:var(--edge)}
+.sub-h.first{margin-top:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:10px}
+.pc{position:relative;border-radius:16px;padding:14px 13px 12px;background:rgba(255,255,255,.03);border:1px solid var(--edge);display:grid;gap:2px;transition:transform .2s,border-color .2s,background .2s,box-shadow .2s;overflow:hidden}
+.pc:hover{transform:translateY(-2px);border-color:var(--edge-2)}
+.pc.on{border-color:rgba(255,59,68,.7);background:radial-gradient(120% 90% at 100% 0%,rgba(237,8,18,.28),rgba(237,8,18,.04) 60%),rgba(255,255,255,.03);box-shadow:0 18px 40px -22px var(--red-glow),inset 0 1px 0 rgba(255,255,255,.08)}
+.pc.off{opacity:.45}
+.pc-top{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase;min-height:22px}
+.pc-badge{background:#fff;color:var(--maroon);font-size:12px;font-weight:800;min-width:24px;height:24px;border-radius:12px;display:grid;place-items:center;padding:0 7px;letter-spacing:0}
+.pc-tag{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:-.035em;margin-top:6px;line-height:1.1}
+.pc-price{font-size:15px;font-weight:700;margin-top:10px}
+.pc-price small{font-weight:500;color:var(--muted);font-size:12px}
+.pc-from{font-size:12px;color:var(--muted);min-height:18px}
+.pc-from b{color:var(--red-hi);font-weight:700}
+.pc-from.bad{color:#FF8A90;font-weight:600}
+.pc-q{display:flex;align-items:center;justify-content:space-between;margin-top:12px;background:rgba(0,0,0,.3);border:1px solid var(--edge);border-radius:999px;padding:3px}
+.pc-q button{width:32px;height:32px;border-radius:50%;border:0;background:none;cursor:pointer;font-size:18px;line-height:1;color:var(--ink)}
+.pc-q button[data-q="1"]{background:var(--red);color:#fff;box-shadow:0 4px 14px -4px var(--red-glow)}
+.pc-q button:disabled{opacity:.25;cursor:not-allowed;box-shadow:none}
+.pc-q span{font-family:var(--display);font-weight:500}
+.pc-add{margin-top:12px;border:1px solid var(--edge);background:rgba(0,0,0,.3);border-radius:999px;padding:9px;font-weight:600;cursor:pointer;color:var(--ink)}
+.pc-add:not(:disabled):hover{border-color:var(--red)}
+.pc.on .pc-add{background:var(--red);border-color:var(--red);color:#fff}
+.pc-add:disabled{cursor:not-allowed}
+
+/* tilbuddet */
+.ol{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 18px;padding:18px 0;border-top:1px solid var(--edge)}
+.ol:first-child{border-top:0;padding-top:0}
+.ol-n b{font-size:16px;font-weight:700}
+.ol-n div{color:var(--muted);font-size:12px;margin-top:3px}
+.ol-t{font-family:var(--display);font-weight:500;font-size:17px;text-align:right;white-space:nowrap;letter-spacing:-.02em}
+.ol-t div{font-family:var(--f);color:#FFB3B7;font-weight:600;font-size:11px;letter-spacing:.02em;margin-top:4px}
+.ol-o{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:12px 18px;align-items:end}
+.ctl{display:grid;gap:6px;font-size:11px;color:var(--dim);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.mini{display:inline-flex;align-items:center;border:1px solid var(--edge);border-radius:10px;background:rgba(0,0,0,.28)}
+.mini button{width:30px;height:34px;border:0;background:none;cursor:pointer;font-size:16px;color:var(--ink)}
+.mini button:disabled{opacity:.25}
+.mini span{min-width:24px;text-align:center;font-weight:700;color:var(--ink);font-size:14px;letter-spacing:0;text-transform:none}
+.ol .seg button{padding:7px 11px;text-transform:none;letter-spacing:0}
+.ctl select{background:rgba(0,0,0,.28);border:1px solid var(--edge);border-radius:10px;padding:0 12px;font-size:13px;font-weight:600;color:var(--ink);height:36px;text-transform:none;letter-spacing:0}
+.ctl select option{background:#1A0E0F}
+.ol-empty{color:var(--muted);text-align:center;padding:22px;border:1px dashed var(--edge-2);border-radius:14px}
+
+/* mailen */
+.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);display:grid;gap:14px;min-width:0}
+.sheet{position:relative;background:var(--paper);color:#1F1F1F;border-radius:18px;overflow:hidden;box-shadow:0 40px 80px -30px rgba(237,8,18,.35),0 30px 60px -30px rgba(0,0,0,.8)}
+.sheet-h{display:flex;gap:12px;align-items:center;padding:16px 22px;background:#F5F6F8;border-bottom:1px solid #E9E4E5}
+.av{width:38px;height:38px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-family:var(--display);font-size:14px;flex:none}
+.sheet-h div{min-width:0;display:grid;gap:1px}
+.sheet-h b{font-size:14px;color:#1F1F1F;overflow-wrap:anywhere}
+.sheet-h span{font-size:12px;color:#7B6F71;overflow-wrap:anywhere}
+.mail{padding:24px 26px;max-height:calc(100vh - 260px);overflow:auto}
+.empty{color:#8C7F81;padding:56px 0;text-align:center}
+.btns{display:grid;grid-template-columns:1fr auto;gap:10px}
+.primary{position:relative;background:linear-gradient(180deg,#FF2A33,var(--red));color:#fff;border:0;border-radius:14px;padding:16px;font-weight:700;font-size:15px;letter-spacing:.01em;cursor:pointer;box-shadow:0 16px 36px -14px var(--red-glow),inset 0 1px 0 rgba(255,255,255,.25)}
+.primary:hover{filter:brightness(1.08)}
+.primary:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+.ghost{background:rgba(255,255,255,.05);border:1px solid var(--edge);border-radius:14px;padding:14px 18px;cursor:pointer;font-weight:600;color:var(--ink)}
+.ghost:hover{border-color:var(--edge-2)}
+.warn{background:rgba(237,8,18,.12);color:#FFB3B7;border:1px solid rgba(237,8,18,.4);border-radius:12px;padding:11px 14px;font-size:13px;font-weight:500}
+
+/* prisliste */
+.drawer{position:fixed;inset:0;background:rgba(5,2,3,.7);backdrop-filter:blur(6px);display:flex;justify-content:flex-end;z-index:20}
+.dr{background:var(--bg-2);border-left:1px solid var(--edge);width:min(860px,100%);height:100%;overflow:auto;padding:calc(26px + env(safe-area-inset-top,0px)) max(26px,env(safe-area-inset-right,0px)) 48px 26px;display:grid;gap:28px;align-content:start}
+.dr>*{min-width:0}
+.dr h2{margin:0;font-family:var(--display);font-size:24px;font-weight:500;letter-spacing:-.03em}
+.dr h3{margin:0 0 8px;font-size:15px;font-weight:700}
+.hint{color:var(--muted);font-size:12px;margin:0}
+.tw{overflow-x:auto;border:1px solid var(--edge);border-radius:14px}
+table.t{border-collapse:collapse;width:100%;font-size:13px}
+.t th,.t td{padding:10px 14px;border-bottom:1px solid var(--edge);text-align:left;white-space:nowrap}
+.t th{color:var(--dim);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;background:rgba(255,255,255,.03)}
+.t tr:last-child td{border-bottom:0}
+.t td small{color:var(--dim);display:block;font-size:11px}
+.t input{background:rgba(0,0,0,.3);border:1px solid var(--edge);border-radius:8px;padding:7px 9px;font-size:13px;color:var(--ink)}
+textarea{width:100%;border:1px solid var(--edge);border-radius:12px;padding:12px 14px;background:rgba(0,0,0,.3);font-size:13px;resize:vertical;color:var(--ink)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#fff;color:#1F1F1F;padding:12px 20px;border-radius:999px;font-size:13px;font-weight:700;z-index:30;max-width:calc(100% - 32px);box-shadow:0 20px 40px -12px rgba(0,0,0,.6)}
+
+/* ---- vildere ---- */
+@property --ang{syntax:'<angle>';initial-value:0deg;inherits:false}
+.glow{position:fixed;left:0;top:0;width:640px;height:640px;margin:-320px 0 0 -320px;border-radius:50%;background:radial-gradient(circle,rgba(237,8,18,.16),rgba(237,8,18,0) 62%);pointer-events:none;z-index:0;transform:translate3d(var(--gx,-999px),var(--gy,-999px),0);transition:transform .25s cubic-bezier(.2,.7,.2,1)}
+.fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:40}
+.ticker{position:relative;z-index:1;overflow:hidden;border-block:1px solid var(--edge);background:rgba(0,0,0,.28);backdrop-filter:blur(10px);margin-bottom:34px}
+.tk{display:flex;width:max-content;animation:tk 38s linear infinite;padding-block:16px}
+.tk span{font-family:var(--display);font-size:clamp(16px,2vw,22px);font-weight:600;letter-spacing:-.02em;white-space:nowrap;padding-right:34px;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.38)}
+.tk span.hot{color:#fff;-webkit-text-stroke:0;text-shadow:0 0 24px rgba(255,59,68,.6)}
+.tk i{font-style:normal;color:var(--red-hi);padding-right:34px;font-size:18px;align-self:center}
+@keyframes tk{to{transform:translateX(-50%)}}
+.panel{position:relative}
+.panel::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:radial-gradient(420px circle at var(--mx,-999px) var(--my,-999px),rgba(255,59,68,.85),rgba(255,59,68,0) 45%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.pc{transform:perspective(700px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(var(--ty,0px));will-change:transform}
+.pc:hover{--ty:-3px;transform:perspective(700px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(-3px)}
+.pc::after{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(260px circle at var(--px,50%) var(--py,0%),rgba(255,255,255,.14),transparent 45%);opacity:0;transition:opacity .25s;pointer-events:none}
+.pc:hover::after{opacity:1}
+.pc.on::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;background:conic-gradient(from var(--ang),rgba(255,59,68,0) 0 52%,#FF3B44 68%,#fff 75%,#FF3B44 82%,rgba(255,59,68,0) 96%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spin 3s linear infinite;pointer-events:none}
+@keyframes spin{to{--ang:360deg}}
+.pc.pop{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{0%{scale:1}40%{scale:1.06}100%{scale:1}}
+.big .od{display:inline-flex;align-items:flex-end}
+.od .d{display:inline-block;height:1em;overflow:hidden;line-height:1em;vertical-align:bottom}
+.od .s{display:flex;flex-direction:column;transition:transform .9s cubic-bezier(.2,.9,.1,1)}
+.od .s b{display:block;height:1em;line-height:1em;font-weight:inherit}
+.od .c{display:inline-block;line-height:1em}
+.sheet{transition:transform .6s cubic-bezier(.2,.7,.2,1);transform:perspective(1400px) rotateY(var(--sy,0deg)) rotateX(var(--sx,0deg))}
+.sheet.flash{animation:flash 1s ease}
+@keyframes flash{0%{box-shadow:0 0 0 0 rgba(255,59,68,.9),0 40px 80px -30px rgba(237,8,18,.35)}100%{box-shadow:0 0 0 22px rgba(255,59,68,0),0 40px 80px -30px rgba(237,8,18,.35)}}
+.hero h1{font-size:clamp(34px,5.4vw,72px)}
+.total .big{font-size:clamp(52px,8vw,110px)}
+@media (prefers-reduced-motion: reduce){.tk,.pc.on::before{animation:none!important}.glow{display:none}}
+
+/* ---- endnu vildere ---- */
+.stars{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.bw{position:absolute;left:0;right:0;top:250px;height:900px;overflow:hidden;pointer-events:none;z-index:0}
+.bigword{position:absolute;left:50%;top:0;transform:translate3d(-50%,var(--par,0px),0);font-family:var(--display);font-weight:700;font-size:27vw;letter-spacing:-.07em;line-height:.85;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.055);white-space:nowrap;user-select:none}
+.intro{position:fixed;inset:0;z-index:100;background:radial-gradient(60% 50% at 50% 55%,#3A0306 0%,#070304 70%);display:grid;place-content:center;gap:18px;cursor:pointer;transition:opacity .7s cubic-bezier(.7,0,.2,1),visibility .7s,transform .7s cubic-bezier(.7,0,.2,1)}
+.intro.out{opacity:0;visibility:hidden;transform:scale(1.08)}
+.intro-w{display:flex;justify-content:center;font-family:var(--display);font-weight:700;font-size:clamp(60px,15vw,220px);letter-spacing:-.06em;line-height:1;perspective:800px}
+.intro-w span{display:inline-block;background:linear-gradient(180deg,#fff 20%,#FF3B44 90%);-webkit-background-clip:text;background-clip:text;color:transparent;animation:drop 1s cubic-bezier(.2,.9,.1,1) both;filter:drop-shadow(0 0 40px rgba(237,8,18,.55))}
+@keyframes drop{from{transform:translateY(.5em) rotateX(85deg);opacity:0;filter:blur(14px)}to{transform:none;opacity:1}}
+.intro-sub{text-align:center;letter-spacing:.5em;text-transform:uppercase;font-size:12px;font-weight:600;color:#C9B8BA;animation:fadein .8s .7s both}
+.intro-bar{width:min(320px,60vw);height:2px;margin:0 auto;background:rgba(255,255,255,.1);overflow:hidden;border-radius:2px}
+.intro-bar i{display:block;height:100%;background:linear-gradient(90deg,#470205,#FF3B44,#fff);animation:load 1.5s cubic-bezier(.6,0,.2,1) both}
+@keyframes load{from{transform:translateX(-100%)}to{transform:none}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+html.cc,html.cc button,html.cc .pc,html.cc .pill{cursor:none}
+html.cc input,html.cc textarea,html.cc select{cursor:auto}
+.cur,.cur-r{position:fixed;left:0;top:0;border-radius:50%;pointer-events:none;z-index:90}
+.cur{width:8px;height:8px;margin:-4px 0 0 -4px;background:#fff;box-shadow:0 0 12px #FF3B44;transform:translate3d(var(--x,-99px),var(--y,-99px),0)}
+.cur-r{width:38px;height:38px;margin:-19px 0 0 -19px;border:1.5px solid rgba(255,59,68,.85);transform:translate3d(var(--x2,-99px),var(--y2,-99px),0);transition:width .25s,height .25s,margin .25s,background .25s,border-color .25s}
+.cur-r.hov{width:70px;height:70px;margin:-35px 0 0 -35px;background:rgba(255,59,68,.12);border-color:#fff}
+.cur-r.down{width:24px;height:24px;margin:-12px 0 0 -12px}
+.total{position:relative}
+.wave{position:absolute;right:18%;top:55%;width:24px;height:24px;margin:-12px;border-radius:50%;border:2px solid rgba(255,90,98,.9);opacity:0;pointer-events:none}
+.wave.go{animation:wave 1s cubic-bezier(.1,.6,.3,1)}
+@keyframes wave{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(26)}}
+.total .big.hit{animation:hit .5s cubic-bezier(.3,1.5,.5,1)}
+@keyframes hit{0%{scale:1}35%{scale:1.06;text-shadow:0 0 90px rgba(255,59,68,.9)}100%{scale:1}}
+.banner{position:fixed;left:0;top:44%;z-index:55;pointer-events:none;font-family:var(--display);font-size:clamp(38px,8vw,120px);font-weight:700;letter-spacing:-.04em;white-space:nowrap;color:#fff;background:linear-gradient(90deg,#B0040C,#FF2A33 50%,#B0040C);padding:.12em .6em;box-shadow:0 40px 90px -20px rgba(237,8,18,.9);transform:translateX(100vw) rotate(-5deg)}
+.banner.go{animation:sweep 1.5s cubic-bezier(.75,0,.2,1) both}
+@keyframes sweep{0%{transform:translateX(100vw) rotate(-5deg)}38%,62%{transform:translateX(calc(50vw - 50%)) rotate(-5deg)}100%{transform:translateX(-110%) rotate(-5deg)}}
+.stage.shake{animation:shake .45s cubic-bezier(.3,.1,.3,1)}
+@keyframes shake{20%{transform:translate(-6px,3px)}40%{transform:translate(5px,-4px)}60%{transform:translate(-4px,2px)}80%{transform:translate(3px,-1px)}}
+#btn-sound[aria-pressed="true"]{background:var(--red);border-color:var(--red);box-shadow:0 0 20px var(--red-glow)}
+@media (prefers-reduced-motion: reduce){.intro,.banner,.cur,.cur-r,.stars{display:none!important}}
+
+/* ---- fuld stil ---- */
+.cur{width:10px;height:10px;margin:-5px 0 0 -5px;background:#fff;box-shadow:0 0 10px #fff,0 0 22px #FF3B44,0 0 44px rgba(255,59,68,.6);transition:width .2s,height .2s,margin .2s}
+.cur.hov{width:16px;height:16px;margin:-8px 0 0 -8px;background:#FF3B44}
+.cur.down{width:6px;height:6px;margin:-3px 0 0 -3px}
+.trail{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:89}
+.eyebrow em{font-style:normal;color:var(--muted);letter-spacing:.18em}
+.eyebrow span{color:#fff}
+.mewrap{position:relative}
+.me{display:inline-flex;align-items:center;gap:8px;padding:5px 14px 5px 5px}
+.me i{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#FF3B44,#470205);display:grid;place-items:center;font-style:normal;font-family:var(--display);font-size:12px}
+.me-edit{position:absolute;right:0;top:calc(100% + 8px);z-index:30;background:#1A0E0F;border:1px solid var(--edge-2);border-radius:14px;padding:8px;box-shadow:0 20px 40px -10px rgba(0,0,0,.7)}
+.me-edit input{background:rgba(0,0,0,.35);border:1px solid var(--edge);border-radius:10px;padding:9px 12px;color:var(--ink);width:200px}
+.day{display:inline-flex;align-items:center;gap:6px;cursor:default;border-color:rgba(255,59,68,.5);background:rgba(237,8,18,.14)}
+.day b{font-family:var(--display);font-weight:600;color:#fff}
+.day.bump{animation:hit .5s cubic-bezier(.3,1.5,.5,1)}
+@media (max-width:720px){.me span,.day{display:none}}
+@media (max-width:560px){#btn-sound{display:none}.nav-a{gap:6px}.me{padding:4px}}
+.keys{display:flex;gap:18px;flex-wrap:wrap;color:var(--dim);font-size:12px}
+.keys span{display:inline-flex;align-items:center;gap:4px}
+kbd{font-family:var(--f);font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--edge-2);border-bottom-width:2px;border-radius:6px;padding:1px 6px;background:rgba(255,255,255,.04)}
+@media (pointer:coarse){.keys{display:none}}
+.empty .sk{display:grid;gap:10px;margin:0 auto 22px;max-width:360px;text-align:left}
+.empty .sk i{display:block;height:10px;border-radius:5px;background:linear-gradient(90deg,#EFEAEA 0%,#F9F6F6 40%,#EFEAEA 80%);background-size:200% 100%;animation:shim 1.6s linear infinite}
+.empty .sk i.gap{height:0;background:none}
+.empty p{margin:0}
+@keyframes shim{to{background-position:-200% 0}}
+.foot{position:relative;z-index:1;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:22px 34px;border-top:1px solid var(--edge);color:var(--dim);font-size:12px}
+.foot span:first-child{font-family:var(--display);color:var(--muted)}
+
+
+/* ---- vildere side ---- */
+.sky canvas.gl{filter:saturate(1.15);opacity:1}
+.tickers{position:relative;z-index:1;height:150px;overflow:hidden;margin-bottom:22px}
+.tickers .ticker{position:absolute;left:-6vw;right:-6vw;top:44px;margin:0}
+.ticker.t1{transform:rotate(-2.2deg);z-index:2;box-shadow:0 20px 40px -20px rgba(0,0,0,.8)}
+.ticker.t2{transform:rotate(2.6deg);background:linear-gradient(90deg,#8A030A,#ED0812,#8A030A);border-color:rgba(255,255,255,.15)}
+.ticker.t2 .tk{animation-duration:30s;padding-block:12px}
+.ticker.t2 span{color:#fff;-webkit-text-stroke:0;font-size:clamp(13px,1.4vw,16px);letter-spacing:.06em}
+.ticker.t2 i{color:#fff}
+.tk.rev{animation-direction:reverse}
+@media (max-width:560px){.tickers{height:118px}.tickers .ticker{top:30px}}
+.panel{overflow:hidden}
+.ph b{position:absolute;right:-8px;top:-34px;font-family:var(--display);font-weight:700;font-size:150px;line-height:1;letter-spacing:-.06em;color:transparent;-webkit-text-stroke:1px rgba(255,59,68,.22);pointer-events:none;user-select:none}
+.ph{position:relative}
+.ph h2{font-size:22px}
+.ph h2::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 14px var(--red);margin-right:12px;vertical-align:middle;position:relative;top:-2px}
+.mail tr.fl td{animation:rowfl 1.2s ease}
+@keyframes rowfl{0%{background:#FFD9DB}100%{background:transparent}}
+.ph span{position:relative;z-index:1}
+
+/* ---- fuld styling af resten ---- */
+.pc-top{gap:8px;justify-content:flex-start}
+.pc{min-width:0;grid-template-columns:minmax(0,1fr)}
+.pc.on .cat{display:none}
+.pc-top>span:not(.ico):not(.pc-badge){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-q{min-width:0}.pc-q button{flex:none}.pc-q span{flex:1;text-align:center}
+.grid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))}
+.pc-top .pc-badge{margin-left:auto}
+.ico{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;background:rgba(255,59,68,.14);flex:none}
+.ico svg{width:13px;height:13px;fill:#FF5A62}
+.pc.on .ico{background:var(--red)}.pc.on .ico svg{fill:#fff}
+.ico.bolt{background:rgba(255,200,60,.12)}.ico.bolt svg{fill:#FFC24A}
+.meter{height:4px;border-radius:2px;background:rgba(255,255,255,.07);margin-top:8px;overflow:hidden}
+.meter i{display:block;height:100%;border-radius:2px;background:linear-gradient(90deg,#6A0309,#ED0812,#FF8A90);box-shadow:0 0 10px rgba(237,8,18,.6)}
+.meter.inf i{background:repeating-linear-gradient(110deg,#ED0812 0 10px,#FF5A62 10px 20px);background-size:40px 100%;animation:flow 1.2s linear infinite}
+@keyframes flow{to{background-position:40px 0}}
+.pc{background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.015) 60%)}
+.pc.el.on{border-color:rgba(255,194,74,.7);background:radial-gradient(120% 90% at 100% 0%,rgba(255,194,74,.18),rgba(255,194,74,.02) 60%),rgba(255,255,255,.03);box-shadow:0 18px 40px -22px rgba(255,194,74,.5)}
+.pc.el.on::before{background:conic-gradient(from var(--ang),rgba(255,194,74,0) 0 52%,#FFC24A 68%,#fff 75%,#FFC24A 82%,rgba(255,194,74,0) 96%)}
+.pc.el.on .pc-add{background:#FFC24A;border-color:#FFC24A;color:#2A1600}
+/* tilbudslinjer som billetter */
+#order{display:grid;gap:12px}
+.ol{grid-template-columns:auto minmax(0,1fr) auto;align-items:center;padding:16px 18px;border:1px solid var(--edge);border-radius:18px;background:linear-gradient(120deg,rgba(255,255,255,.05),rgba(255,255,255,.015));position:relative;overflow:hidden}
+.ol:first-child{padding-top:16px;border-top:1px solid var(--edge)}
+.ol::after{content:"";position:absolute;right:-60px;top:-60px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(237,8,18,.22),transparent 65%);pointer-events:none}
+.ol-q{font-family:var(--display);font-weight:600;font-size:34px;letter-spacing:-.05em;line-height:1;min-width:58px;color:#fff;text-shadow:0 0 30px rgba(237,8,18,.6)}
+.ol-q small{font-size:.5em;color:var(--red-hi);margin-left:2px}
+.ol-n div{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.ol-n div span{font-size:11px;font-weight:600;color:var(--muted);background:rgba(255,255,255,.06);border:1px solid var(--edge);border-radius:999px;padding:2px 9px}
+.ol-n div span:nth-child(2){color:#FFB3B7;border-color:rgba(255,59,68,.35);background:rgba(237,8,18,.1)}
+.ol-t{font-size:20px}
+.ol-o{padding-top:12px;border-top:1px dashed var(--edge-2)}
+@media (max-width:560px){.ol{grid-template-columns:auto minmax(0,1fr)}.ol-t{grid-column:1/-1;text-align:left}}
+.ol-empty{padding:34px;border-radius:18px;background:repeating-linear-gradient(135deg,rgba(255,255,255,.02) 0 12px,transparent 12px 24px);font-weight:600}
+/* prisliste */
+.dr{background:radial-gradient(120% 60% at 100% 0%,rgba(237,8,18,.18),transparent 60%),var(--bg-2)}
+.t tbody tr:hover td{background:rgba(255,255,255,.025)}
+.t td b{font-weight:700}
+.t td b.camp{color:#FF6A72}
+.t .chips{display:flex;gap:4px;margin-top:4px}
+.chip{font-style:normal;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid var(--edge);color:var(--muted)}
+.chip.int{color:#FFB3B7;border-color:rgba(255,59,68,.35);background:rgba(237,8,18,.1)}
+.t small.exp{color:#FF6A72;font-weight:600}
+.t thead th{position:sticky;top:0;backdrop-filter:blur(8px)}
+/* toast */
+.toast{display:flex;align-items:center;gap:10px;padding:12px 20px 12px 14px}
+.toast::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 0 4px rgba(237,8,18,.18);flex:none}
+/* mailark */
+.sheet::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,#470205,#ED0812,#FF8A90,#ED0812,#470205);z-index:2}
+.warn{display:flex;gap:10px;align-items:flex-start}
+.warn::before{content:"!";flex:none;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:800;font-size:12px}
+
+/* telefonrabat */
+.pc-ph{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;color:#FFC9CC;font-weight:600}
+.pc-ph svg{width:12px;height:12px;fill:#FF6A72;flex:none}
+.pc-ph b{color:#fff}
+.phone{grid-column:1/-1;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:10px 16px;align-items:center;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,59,68,.45);background:linear-gradient(100deg,rgba(237,8,18,.22),rgba(237,8,18,.06));box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.phone>svg{width:30px;height:30px;padding:6px;border-radius:9px;background:var(--red);fill:#fff;box-shadow:0 6px 16px -6px var(--red-glow)}
+.ph-t b{display:block;font-size:14px}
+.ph-t span{font-size:11px;color:#FFC9CC}
+.ph-r{display:flex;gap:6px;flex-wrap:wrap}
+.ph-r em{font-style:normal;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12)}
+.ph-sum{font-family:var(--display);font-weight:600;font-size:20px;letter-spacing:-.02em;text-align:right;white-space:nowrap}
+.ph-sum small{display:block;font-family:var(--f);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#FFB3B7}
+.phone.none{grid-template-columns:auto 1fr;border-style:dashed;border-color:var(--edge-2);background:none;color:var(--dim);font-size:12px;font-weight:600}
+.phone.none>svg{background:rgba(255,255,255,.08);box-shadow:none;fill:var(--dim);width:26px;height:26px;padding:5px}
+@media (max-width:640px){.phone{grid-template-columns:auto minmax(0,1fr)}.ph-r,.ph-sum{grid-column:1/-1;text-align:left}}
+
+.split{align-self:end;height:36px;border:1px dashed rgba(255,59,68,.6);background:rgba(237,8,18,.08);color:#FFC9CC;border-radius:10px;padding:0 14px;font-size:13px;font-weight:700;cursor:pointer}
+.split:hover{background:rgba(237,8,18,.18);color:#fff;border-style:solid}
+.ol-n div span:first-child{color:#fff;background:rgba(237,8,18,.25);border-color:rgba(255,59,68,.5)}
+.ol-n div span:nth-child(2){color:var(--muted);border-color:var(--edge);background:rgba(255,255,255,.06)}
+.ol-n div span:nth-child(3){color:#FFB3B7;border-color:rgba(255,59,68,.35);background:rgba(237,8,18,.1)}
+
+/* ---- elegante løbebånd ---- */
+.tickers{height:120px;margin-bottom:26px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14%,#000 86%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 14%,#000 86%,transparent 100%)}
+.tickers .ticker{top:34px;backdrop-filter:blur(14px)}
+.ticker.t1{transform:rotate(-1.1deg);background:rgba(10,4,5,.55);border-color:rgba(255,255,255,.08);box-shadow:0 18px 40px -24px rgba(0,0,0,.9)}
+.ticker.t1 .tk{animation-duration:64s;padding-block:13px}
+.ticker.t1 span{font-size:clamp(14px,1.5vw,18px);font-weight:500;letter-spacing:.02em;-webkit-text-stroke:.6px rgba(255,255,255,.32)}
+.ticker.t1 span.hot{text-shadow:0 0 18px rgba(255,59,68,.45)}
+.ticker.t1 i,.ticker.t2 i{font-size:10px;opacity:.7;padding-right:28px}
+.ticker.t2{transform:rotate(1.3deg);background:linear-gradient(90deg,rgba(71,2,5,.75),rgba(150,4,12,.75),rgba(71,2,5,.75));border-color:rgba(255,90,98,.28)}
+.ticker.t2 .tk{animation-duration:52s;padding-block:9px}
+.ticker.t2 span{font-family:var(--f);font-size:11px;font-weight:700;letter-spacing:.32em;color:#FFD9DB;padding-right:28px}
+.tickers .ticker.t1{animation:inL 1.6s .45s cubic-bezier(.16,1,.3,1) both}
+.tickers .ticker.t2{animation:inR 1.6s .3s cubic-bezier(.16,1,.3,1) both}
+@keyframes inL{from{translate:-35vw 0;opacity:0}to{translate:0 0;opacity:1}}
+@keyframes inR{from{translate:35vw 0;opacity:0}to{translate:0 0;opacity:1}}
+.tickers{height:128px}.ticker.t2{top:22px!important;z-index:1}.ticker.t1{top:60px!important;z-index:2}
+@media (max-width:560px){.tickers{height:104px}.ticker.t2{top:14px!important}.ticker.t1{top:46px!important}}
+
+/* telefoner */
+.phf{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:end;padding:14px;border:1px solid var(--edge);border-radius:16px;background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.015))}
+.phf .grow{flex:1 1 200px}
+.phf input,.phf select{background:rgba(0,0,0,.3);border:1px solid var(--edge);border-radius:10px;height:36px;padding:0 12px;font-size:14px;font-weight:600;color:var(--ink);text-transform:none;letter-spacing:0;width:100%;min-width:0}
+.phf input::placeholder{color:var(--dim);font-weight:500}
+.phf input:focus,.phf select:focus{border-color:var(--red);outline:none}
+.phf #ph-price{width:110px}
+.phadd{height:36px;border:0;border-radius:10px;padding:0 16px;background:var(--red);color:#fff;font-weight:700;cursor:pointer;box-shadow:0 8px 20px -10px var(--red-glow)}
+.phadd:hover{filter:brightness(1.1)}
+#ph-lines{display:grid;gap:8px;margin-top:10px}
+.phl{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,59,68,.35);background:linear-gradient(100deg,rgba(237,8,18,.14),rgba(237,8,18,.03))}
+.phl>svg{width:28px;height:28px;padding:6px;border-radius:8px;background:var(--red);fill:#fff}
+.phl b{display:block;font-size:14px}
+.phl span{font-size:12px;color:var(--muted)}
+.phl em{font-style:normal;font-family:var(--display);font-weight:500;font-size:15px;white-space:nowrap}
+.phl button{width:30px;height:30px;border-radius:50%;border:1px solid var(--edge);background:rgba(0,0,0,.3);color:var(--muted);cursor:pointer}
+.phl button:hover{color:#fff;border-color:var(--red)}
+.ph-avail{display:flex;gap:10px;align-items:center;margin-top:10px;font-size:12px;color:#FFC9CC}
+.ph-avail svg{width:14px;height:14px;fill:#FF6A72;flex:none}
+.ph-avail b{color:#fff}
+/* ---- filmisk intro ---- */
+.intro{display:block;place-content:normal;background:radial-gradient(80% 60% at 50% 70%,#1C0204 0%,#050203 70%);cursor:pointer;transition:none}
+.intro canvas{position:absolute;inset:0;width:100%;height:100%}
+.intro-line{position:absolute;left:50%;top:62%;height:1px;width:0;transform:translateX(-50%);background:linear-gradient(90deg,transparent,#FF3B44 20%,#fff 50%,#FF3B44 80%,transparent);box-shadow:0 0 18px #FF3B44,0 0 40px rgba(237,8,18,.8)}
+.intro.go .intro-line{animation:line 1.1s cubic-bezier(.7,0,.2,1) forwards}
+@keyframes line{0%{width:0;opacity:1}55%{width:80vw;opacity:1}100%{width:80vw;opacity:0}}
+.intro-sub{position:absolute;left:0;right:0;top:calc(45% + min(9vw,128px));opacity:0;transform:translateY(10px);transition:opacity .6s,transform .6s;letter-spacing:.55em;font-size:13px;color:#E8D6D8}
+.intro.sub .intro-sub{opacity:1;transform:none}
+.intro-skip{position:absolute;left:0;right:0;bottom:calc(28px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.3)}
+.intro.out{animation:fly .95s cubic-bezier(.7,0,.25,1) forwards;transform:none;opacity:1;visibility:visible}
+@keyframes fly{to{transform:scale(6);opacity:0;filter:blur(10px)}}
+.stage.enter{animation:land 1.1s cubic-bezier(.2,.8,.2,1)}
+@keyframes land{from{transform:scale(1.08);opacity:0;filter:blur(12px)}to{transform:none;opacity:1;filter:none}}
+.stage.enter .hero h1{animation:rise 1s .35s cubic-bezier(.2,.7,.2,1) both}
+
+.mark{cursor:pointer}
+@keyframes rise{from{opacity:.001;transform:translateY(10px)}to{opacity:1;transform:none}}
+.hero > *,.left > *,.side{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+.left > *:nth-child(2){animation-delay:.06s}.left > *:nth-child(3){animation-delay:.12s}.side{animation-delay:.1s}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="sky" aria-hidden="true"><canvas id="sky"></canvas></div>
+<div class="grain" aria-hidden="true"></div>
+<canvas class="stars" id="stars" aria-hidden="true"></canvas>
+<div class="bw" aria-hidden="true"><div class="bigword" id="bigword">NORLYS</div></div>
+<div class="intro" id="intro" hidden><canvas id="ic"></canvas><div class="intro-line"></div><div class="intro-sub" id="intro-sub">Erhverv · Tilbudsstudio</div><div class="intro-skip">Klik for at springe over</div></div>
+<div class="banner" id="banner" aria-hidden="true">Klar til Outlook ✦</div>
+
+<canvas class="fx" id="fx" aria-hidden="true"></canvas>
+
+<div class="stage">
+<header class="gut">
+  <nav class="nav">
+    <div class="mark"><i>N</i>Norlys Erhverv<span>· Tilbudsstudio</span></div>
+    <div class="nav-a">
+      <div class="pill day" id="day" hidden title="Tilbud kopieret i dag"><b id="day-n">0</b> i dag</div>
+      <div class="mewrap"><button class="pill me" id="btn-me" type="button" title="Dit navn bruges kun til hilsenen"><i id="me-i">?</i><span id="me-n"></span></button>
+        <div class="me-edit" id="me-edit" hidden><input id="me-in" placeholder="Dit navn" autocomplete="name" aria-label="Dit navn"></div></div>
+      <button class="pill" id="btn-sound" type="button" aria-pressed="false">Lyd fra</button>
+      <button class="pill" id="btn-new" type="button">Nyt tilbud</button>
+      <button class="pill" id="btn-prices" type="button">Prisliste</button>
+    </div>
+  </nav>
+  <div class="hero">
+    <div>
+      <div class="eyebrow"><span id="eyebrow">Godmorgen</span><em>✦ Mobil · 5G Internet · El</em></div>
+      <h1 id="hero-h">Et nyt tilbud,<br><em>klar på et minut.</em></h1>
+    </div>
+    <div class="total" aria-live="polite"><i class="wave" id="wave"></i>
+      <small>Samlet pr. md. i binding</small>
+      <div class="big" id="big"><span class="od" id="k-now" style="font-size:1em;color:inherit;margin:0;letter-spacing:inherit;font-weight:inherit"></span><span>kr.</span></div>
+      <div class="stats">
+        <div class="stat"><small>Abonnementer</small><b id="k-n">0</b></div>
+        <div class="stat"><small>Herefter pr. md.</small><b id="k-after">0,-</b></div>
+        <div class="stat int"><small>Telefonrabat · internt</small><b id="k-once">0,-</b></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="tickers" aria-hidden="true"><div class="ticker t2"><div class="tk rev" id="tk2"></div></div><div class="ticker t1"><div class="tk" id="tk"></div></div></div>
+
+<main class="gut wrap">
+  <section class="left">
+    <div class="panel">
+      <div class="ph"><b>01</b><h2>Kunden</h2></div>
+      <div class="cust">
+        <label class="f">Kontaktperson<input id="contact" placeholder="Mette Holm" autocomplete="off"></label>
+        <label class="f">Virksomhed<input id="company" placeholder="Bager Holm ApS" autocomplete="off"></label>
+      </div>
+      <div class="f" style="margin-top:16px">Situation<div class="seg" id="sit">
+        <button type="button" data-s="samtale">Efter samtale</button><button type="button" data-s="forl">Forlængelse</button><button type="button" data-s="kold">Uopfordret</button>
+      </div></div>
+    </div>
+
+    <div class="panel">
+      <div class="ph"><b>02</b><h2>Produkter</h2><span>Alle priser ekskl. moms</span></div>
+      <div class="sub-h first">Mobil</div>
+      <div class="grid" id="g-mobil"></div>
+      <div class="sub-h" id="h-net">5G Internet</div>
+      <div class="grid" id="g-net"></div>
+      <div class="sub-h">El</div>
+      <div class="grid" id="g-el"></div>
+      <div class="sub-h">Telefoner</div>
+      <div class="phf">
+        <label class="ctl grow">Model<input id="ph-model" list="ph-list" placeholder="Fx iPhone 17 128 GB" autocomplete="off"></label>
+        <div class="ctl">Antal<div class="mini"><button type="button" id="ph-minus" aria-label="Færre telefoner">−</button><span id="ph-q">1</span><button type="button" id="ph-plus" aria-label="Flere telefoner">+</button></div></div>
+        <label class="ctl">Pris pr. stk.<input id="ph-price" inputmode="decimal" placeholder="Valgfri"></label>
+        <label class="ctl">Betaling<select id="ph-pay"><option value="once">Engangsbeløb</option><option value="36">Pr. md. i 36 mdr.</option><option value="24">Pr. md. i 24 mdr.</option><option value="12">Pr. md. i 12 mdr.</option></select></label>
+        <button type="button" class="phadd" id="ph-add">Tilføj telefon</button>
+      </div>
+      <datalist id="ph-list"></datalist>
+      <div id="ph-lines"></div>
+      <div class="ph-avail" id="ph-avail" hidden></div>
+    </div>
+
+    <div class="panel">
+      <div class="ph"><b>03</b><h2>Binding og rabat</h2><span>36 mdr. er standard</span></div>
+      <div id="order"></div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <div class="sheet">
+      <div class="sheet-h"><div class="av">N</div><div><b id="subject"></b><span>Til: <span id="to"></span></span></div></div>
+      <div class="mail" id="mail"></div>
+    </div>
+    <div class="warn" id="stale" hidden></div>
+    <div class="btns">
+      <button class="primary" id="copy" type="button">Kopiér mail til Outlook</button>
+      <button class="ghost" id="copy-subj" type="button">Kopiér emne</button>
+    </div>
+    <div class="keys"><span><kbd>Ctrl</kbd><kbd>Enter</kbd> kopiér mail</span><span><kbd>Alt</kbd><kbd>N</kbd> nyt tilbud</span></div>
+  </aside>
+</main>
+<footer class="gut foot"><span>Tilbudsstudio · version 16.11.2026 · elpriser november</span><span>Norlys Erhverv · alle priser ekskl. moms · kundeservice 80 40 40 30</span></footer>
+</div>
+
+<div class="drawer" id="drawer" hidden>
+  <div class="dr" role="dialog" aria-modal="true" aria-labelledby="dr-h">
+    <div class="row" style="justify-content:space-between"><h2 id="dr-h">Prisliste</h2><button class="pill" id="dr-close" type="button">Luk</button></div>
+
+    <div>
+      <h3>Mobil og 5G Internet</h3>
+      <p class="hint" style="margin-bottom:8px">Pris pr. md. ved hver binding. "rabat op til" er den højeste månedsrabat sælgeren må give. Telefonrabat (nyt / forlængelse) er det beløb, kunden kan få i rabat på telefoner. Kun til internt brug og står aldrig i mailen.</p>
+      <div class="tw"><table class="t" id="plan-view"></table></div>
+    </div>
+
+    <div>
+      <h3>El</h3>
+      <p class="hint" style="margin-bottom:8px">Skriv prisen fra norlys.dk, og vælg måneden. Er måneden forældet, advarer siden, før tilbuddet sendes.</p>
+      <div class="tw"><table class="t"><thead><tr><th>Produkt</th><th>Elpris øre/kWh</th><th>Transport og afgifter</th><th>Tillæg øre/kWh</th><th>Abonnement kr./md.</th><th>Gælder for</th></tr></thead><tbody id="el-edit"></tbody></table></div>
+      <label class="f" style="margin-top:10px">Linje under elprisen i mailen<textarea id="el-note" rows="2"></textarea></label>
+    </div>
+
+    <div>
+      <h3>Opdatér fra Excel</h3>
+      <p class="hint" style="margin-bottom:8px">Markér alt på fanen Prisark eller El i Excel (Ctrl+A), kopiér, og sæt ind her.</p>
+      <textarea id="imp" rows="6" placeholder="Sæt prisarket ind her"></textarea>
+      <div class="row" style="margin-top:8px">
+        <button class="primary" id="imp-go" type="button" style="padding:10px 18px;font-size:14px">Indlæs</button>
+        <button class="ghost" id="imp-copy" type="button" style="padding:10px 16px">Kopiér prisarket til Excel</button>
+        <span class="hint" id="imp-msg"></span>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* trin pr. binding: camp = kampagnepris/md., max = maks. månedsrabat, ny/forl = engangsrabat pr. abonnement */
+const T=(binding,camp,max,ny,forl)=>({binding,camp,max,ny,forl});
+const DEFAULT_PLANS=[
+ {id:'c5',cat:'mobil',name:'Corporate 5 GB',list:119,trin:[T(36,0,50,0,0),T(24,0,50,0,0),T(12,0,40,0,0),T(0,0,40,0,0)]},
+ {id:'c10',cat:'mobil',name:'Corporate 10 GB',list:139,trin:[T(36,0,60,200,100),T(24,0,60,100,0),T(12,0,60,0,0),T(0,0,0,0,0)]},
+ {id:'c50',cat:'mobil',name:'Corporate 50 GB',list:179,exp:true,trin:[T(36,149,0,300,200),T(24,159,0,200,100),T(12,169,0,100,0),T(0,0,0,0,0)]},
+ {id:'c100',cat:'mobil',name:'Corporate 100 GB',list:199,trin:[T(36,0,30,300,200),T(24,0,30,200,200),T(12,0,30,200,100),T(0,0,0,0,0)]},
+ {id:'c1000',cat:'mobil',name:'Corporate 1000 GB',list:249,exp:true,trin:[T(36,179,0,400,300),T(24,179,0,300,200),T(12,179,0,200,100),T(0,0,0,0,0)]},
+ {id:'m5g',cat:'net',name:'Mobilt internet 5G fri data',list:279,trin:[T(36,199,0,400,300),T(24,249,0,300,200),T(12,0,0,200,100),T(0,0,0,0,0)]}
+];
+/* priser fra norlys.dk/erhverv, november 2026 (ekskl. moms) */
+const DEFAULT_EL=[
+ {id:'variabel',name:'VariabelEl',kind:'variabel',pris:85,transport:43,tillaeg:10,abon:19,month:'2026-11'},
+ {id:'maaned',name:'MånedsEl',kind:'maaned',pris:167.45,transport:43,tillaeg:0,abon:19,month:'2026-11'}
+];
+const DEFAULT_EL_NOTE='';
+const INTRO={
+ samtale:()=>'Tak for en god samtale. Som lovet sender jeg her tilbuddet på jeres nye løsning.',
+ forl:()=>'Tak for en god samtale. Jeg kan se, at I har haft nogle gode rabatter hos os, som vi selvfølgelig gerne vil have, at I fortsætter med. For at fastholde rabatterne skal jeres abonnementer bindes igen til en fast, lav pris, som ikke kan stige i bindingsperioden. Her er tilbuddet:',
+ kold:(c,w)=>`Jeg skriver til dig, fordi jeg tror, at ${c||'I'} kan få en stærkere aftale på ${w}, end I har i dag. Derfor har jeg sat et konkret tilbud sammen til jer, så du med det samme kan se, hvad det vil koste.`
+};
+const STEP=10;
+
+const $=id=>document.getElementById(id);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const clone=o=>JSON.parse(JSON.stringify(o));
+let plans=store.get('ts8.plans',clone(DEFAULT_PLANS));
+/* gemte elpriser bruges kun, hvis de er mindst lige så nye som de indbyggede */
+let el=(()=>{const st=store.get('ts9.el',null);return DEFAULT_EL.map(d=>{const x=st&&st.find(y=>y.id===d.id);return x&&+x.pris>0&&(x.month||'')>=d.month?{...d,...x}:clone(d)})})();
+let elNote=store.get('ts9.elnote',DEFAULT_EL_NOTE);
+const plusDays=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)};
+const fresh=()=>({contact:'',company:'',lines:[],el:{},phones:[],situation:'samtale'});
+let S=fresh();
+
+/* tal */
+const r2=n=>Math.round(n*100)/100;
+function kr(n){const v=r2(n);return Number.isInteger(v)?v.toLocaleString('da-DK')+',-':v.toLocaleString('da-DK',{minimumFractionDigits:2,maximumFractionDigits:2})}
+const ore=n=>r2(n).toLocaleString('da-DK',{maximumFractionDigits:2});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{const n=parseFloat(String(v??'').replace(/\s/g,'').replace(/\.(?=\d{3}(\D|$))/g,'').replace(',','.'));return isNaN(n)?0:n};
+const curMonth=()=>new Date().toISOString().slice(0,7);
+const monthName=m=>m?new Date(m+'-15T12:00:00').toLocaleDateString('da-DK',{month:'long',year:'numeric'}):'';
+const prevMonth=m=>{const[y,mo]=m.split('-').map(Number);const d=new Date(y,mo-2,15);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')};
+const elStale=e=>e.month!==curMonth();
+const elMissing=e=>!(+e.pris>0);
+
+const sortT=p=>[...p.trin].sort((a,b)=>b.binding-a.binding);
+const trinOf=(p,b)=>p.trin.find(t=>+t.binding===+b)||sortT(p)[0];
+const qty=it=>(+it.ny||0)+(+it.forl||0);
+function unit(p,it){const t=trinOf(p,it.binding);const base=+t.camp>0?+t.camp:+p.list;return Math.max(0,base-Math.min(+it.mr||0,+t.max||0))}
+function once(p,it){const t=trinOf(p,it.binding);return (+it.ny||0)*(+t.ny||0)+(+it.forl||0)*(+t.forl||0)}
+const pIdx=id=>plans.findIndex(p=>p.id===id);
+const active=()=>S.lines.map(it=>({p:plans.find(x=>x.id===it.pid),it})).filter(x=>x.p&&qty(x.it)>0).sort((a,b)=>pIdx(a.p.id)-pIdx(b.p.id)||b.it.binding-a.it.binding);
+const linesOf=pid=>S.lines.filter(l=>l.pid===pid);
+const uid=()=>Math.random().toString(36).slice(2,9);
+const cleanLines=()=>{S.lines=S.lines.filter(l=>qty(l)>0)};
+function lowest(p){return Math.min(+p.list,...p.trin.map(t=>(+t.camp>0?+t.camp:+p.list)-(+t.max||0)))}
+const expires=(p,it)=>!!p.exp&&+it.binding>0;
+const afterUnit=(p,it)=>expires(p,it)?+p.list:unit(p,it);
+function totals(){let now=0,after=0,on=0,n=0;active().forEach(({p,it})=>{const q=qty(it);n+=q;now+=q*unit(p,it);after+=q*afterUnit(p,it);on+=once(p,it)});return{now:r2(now),after:r2(after),once:r2(on),n}}
+
+/* venstre */
+const ICO={mobil:'<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2" y="12" width="3" height="6" rx="1"/><rect x="7" y="9" width="3" height="9" rx="1"/><rect x="12" y="5" width="3" height="13" rx="1"/><rect x="17" y="2" width="1.5" height="16" rx=".75" opacity=".35"/></svg>',
+ net:'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 11a1.6 1.6 0 1 1 0 3.2A1.6 1.6 0 0 1 10 11Zm-4.2-2.4a6 6 0 0 1 8.4 0l-1.2 1.2a4.3 4.3 0 0 0-6 0Zm-2.6-2.6a9.6 9.6 0 0 1 13.6 0l-1.2 1.2a7.9 7.9 0 0 0-11.2 0Z"/><rect x="9.2" y="14" width="1.6" height="4.5" rx=".8"/></svg>',
+ el:'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M11.5 1.5 4 11h5l-1 7.5L16 8.5h-5.2Z"/></svg>',
+ phone:'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6.5 1.5h7a1.8 1.8 0 0 1 1.8 1.8v13.4a1.8 1.8 0 0 1-1.8 1.8h-7a1.8 1.8 0 0 1-1.8-1.8V3.3a1.8 1.8 0 0 1 1.8-1.8Zm0 2v11.5h7V3.5Zm3.5 12.4a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8Z"/></svg>'};
+const phoneMax=p=>Math.max(0,...p.trin.map(t=>+t.ny||0));
+function meter(name){const m=name.match(/(\d+)\s*GB/i);if(!m)return {w:100,inf:true};const v=+m[1];return {w:Math.max(12,Math.round(Math.log10(v)/3*100)),inf:false}}
+function tag(name){const m=name.match(/(\d+)\s*GB/i);return m?m[1]+' GB':(/fri data/i.test(name)?'Fri data':name)}
+function shortName(name){return name.replace(/\s*\d+\s*GB/i,'').replace(/\s*fri data/i,'').trim()}
+function card(p){const q=linesOf(p.id).reduce((a,l)=>a+qty(l),0),miss=!(+p.list>0),lo=miss?0:lowest(p);
+ return `<div class="pc${q?' on':''}${miss?' off':''}" data-pid="${p.id}">
+  <div class="pc-top"><span class="ico">${ICO[p.cat]||''}</span><span class="cat">${p.cat==='net'?'5G':'Mobil'}</span>${q?`<span class="pc-badge">${q}</span>`:''}</div>
+  <div class="pc-tag">${esc(tag(p.name))}</div>
+  <div class="meter${meter(p.name).inf?' inf':''}" aria-hidden="true"><i style="width:${meter(p.name).w}%"></i></div>
+  <div class="pc-price">${miss?'<span class="pc-from bad">Mangler pris</span>':`${kr(p.list)}<small> kr./md.</small>`}</div>
+  <div class="pc-from">${!miss&&lo<p.list?`med binding fra <b>${kr(lo)}</b>`:'&nbsp;'}</div>
+  ${phoneMax(p)?`<div class="pc-ph">${ICO.phone}<span>Tlf.rabat op til <b>${kr(phoneMax(p))}</b></span></div>`:''}
+  <div class="pc-q"><button type="button" data-q="-1" aria-label="Færre ${esc(p.name)}"${q?'':' disabled'}>−</button><span>${q}</span><button type="button" data-q="1" aria-label="Flere ${esc(p.name)}"${miss?' disabled':''}>+</button></div>
+ </div>`}
+function elCard(e){const on=!!S.el[e.id],miss=elMissing(e),st=!miss&&elStale(e);
+ return `<div class="pc el${on?' on':''}${miss?' off':''}" data-el="${e.id}">
+  <div class="pc-top"><span class="ico bolt">${ICO.el}</span><span class="cat">${e.kind==='maaned'?'Fast':'Variabel'}</span>${on?'<span class="pc-badge">✓</span>':''}</div>
+  <div class="pc-tag">${esc(e.name)}</div>
+  <div class="pc-price">${miss?'<span class="pc-from bad">Mangler pris</span>':`${ore(e.pris)}<small> øre/kWh</small>`}</div>
+  <div class="pc-from${st?' bad':''}">${miss?'&nbsp;':st?'Pris ikke opdateret':monthName(e.month)}</div>
+  <div class="pc-from"><b>Uden binding</b></div>
+  <button type="button" class="pc-add" aria-pressed="${on}"${miss&&!on?' disabled':''}>${on?'Valgt':'Tilføj'}</button>
+ </div>`}
+function phoneBox(t,it,o){if(!(+t.ny||+t.forl))return `<div class="phone none">${ICO.phone}<span>Ingen telefonrabat ved ${+it.binding?it.binding+' mdr.':'ingen binding'}</span></div>`;
+ const parts=[];if(+t.ny)parts.push(`<em>${kr(t.ny)} pr. nyt</em>`);if(+t.forl)parts.push(`<em>${kr(t.forl)} pr. forlængelse</em>`);
+ return `<div class="phone">${ICO.phone}<div class="ph-t"><b>Telefonrabat</b><span>Rabat på telefoner · kun til dig</span></div><div class="ph-r">${parts.join('')}</div><div class="ph-sum">${kr(o)}<small>i alt · internt</small></div></div>`}
+function stepper(kind,v,label){return `<div class="ctl">${label}<div class="mini"><button type="button" data-n="${kind}:-1" aria-label="Færre ${label.toLowerCase()}"${v?'':' disabled'}>−</button><span>${v}</span><button type="button" data-n="${kind}:1" aria-label="Flere ${label.toLowerCase()}">+</button></div></div>`}
+function renderProducts(){
+ $('g-mobil').innerHTML=plans.filter(p=>p.cat==='mobil').map(card).join('');
+ const net=plans.filter(p=>p.cat==='net');$('g-net').innerHTML=net.map(card).join('');$('h-net').hidden=!net.length;
+ $('g-el').innerHTML=el.map(elCard).join('');
+ const act=active();
+ $('order').innerHTML=act.length?act.map(({p,it})=>{const t=trinOf(p,it.binding),mx=+t.max||0,u=unit(p,it),o=once(p,it);
+  const info=[`${+it.binding?it.binding+' mdr.':'Ingen binding'}`,`${kr(u)} pr. stk.`];if(expires(p,it))info.push(`kampagne, herefter ${kr(p.list)}`);
+  const many=linesOf(p.id).length>1;
+  return `<div class="ol" data-key="${it.key}" data-pl="${p.id}">
+   <div class="ol-q">${qty(it)}<small>×</small></div>
+   <div class="ol-n"><b>${esc(p.name)}</b><div>${info.map(x=>`<span>${x}</span>`).join('')}</div></div>
+   <div class="ol-t">${kr(qty(it)*u)} kr./md.</div>
+   <div class="ol-o">${stepper('ny',+it.ny||0,'Nye')}${stepper('forl',+it.forl||0,'Forlængelser')}
+    <div class="ctl">Binding<div class="seg">${sortT(p).map(x=>`<button type="button" data-bind="${x.binding}" aria-pressed="${+x.binding===+it.binding}">${+x.binding?x.binding+' mdr.':'Ingen'}</button>`).join('')}</div></div>
+    ${mx>0?`<label class="ctl">Rabat pr. md.<select data-mr>${Array.from({length:Math.floor(mx/STEP)+1},(_,i)=>i*STEP).map(v=>`<option value="${v}"${+it.mr===v?' selected':''}>${v?'−'+v+' kr.':'Ingen'}</option>`).join('')}</select></label>`:''}
+    <button type="button" class="split" data-split="1">+ Anden binding</button>
+   </div>${phoneBox(t,it,o)}</div>`}).join(''):'<div class="ol-empty">Tryk + på et produkt for at bygge tilbuddet.</div>';
+ const tt=totals();tween('k-n',tt.n,v=>String(Math.round(v)));if(tt.now>(window._last||0)&&window._last!==undefined)hitTotal();window._last=tt.now;odo($('k-now'),kr(tt.now));sky.target=Math.min(1,tt.n/12);ticker();tween('k-after',tt.after,kr);tween('k-once',tt.once,kr);
+ document.querySelectorAll('#sit button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===S.situation));
+}
+
+/* mailen */
+function subject(){const c=S.company.trim();return `Tilbud på ${what()}${c?' til '+c:''} | Norlys Erhverv`}
+function what(){const a=active(),w=[];if(a.some(x=>x.p.cat==='mobil'))w.push('mobil');if(a.some(x=>x.p.cat==='net'))w.push('internet');if(Object.keys(S.el).length)w.push('el');if(S.phones.length)w.push('telefoner');if(!w.length)w.push('mobil');return w.length>1?w.slice(0,-1).join(', ')+' og '+w[w.length-1]:w[0]}
+function phoneLines(){return S.phones.map(f=>{const pr=+f.price||0,m=f.pay!=='once';
+ return {name:`${f.qty} × ${f.model}`,price:pr?(m?`${kr(pr)} kr./md.${f.qty>1?' pr. stk.':''} i ${f.pay} måneder`:`${kr(pr)} kr.${f.qty>1?' pr. stk.':''} (engangsbeløb)`):'',total:pr?(m?`${kr(f.qty*pr)} kr./md.`:`${kr(f.qty*pr)} kr.`):''}})}
+function model(){
+ const mk=(p,it,q)=>{const u=unit(p,it),ps=q>1?' pr. stk.':'';
+  const price=+it.binding===0?`${kr(u)} kr./md.${ps} – ingen binding`:expires(p,it)?`${kr(u)} kr./md.${ps} i ${it.binding} måneder – herefter ${kr(p.list)} kr./md.`:`${kr(u)} kr./md.${ps} ved ${it.binding} måneders binding`;
+  return {qty:q,name:p.name,price,total:`${kr(q*u)} kr.`}};
+ const groups=[['NYE ABONNEMENTER','ny'],['FORLÆNGELSER','forl']].map(([label,k])=>{const mp=new Map();active().filter(x=>+x.it[k]>0).forEach(({p,it})=>{const id=p.id+'|'+it.binding+'|'+(+it.mr||0);const c=mp.get(id);if(c)c.q+=+it[k];else mp.set(id,{p,it,q:+it[k]})});return {label,lines:[...mp.values()].map(x=>mk(x.p,x.it,x.q))}}).filter(g=>g.lines.length);
+ const lines=groups.flatMap(g=>g.lines);
+ const tt=totals(),eb=[...new Set(active().filter(x=>expires(x.p,x.it)).map(x=>+x.it.binding))];
+ let after='';if(tt.after!==tt.now)after=eb.length===1?`Efter ${eb[0]} måneder: ${kr(tt.after)} kr./md.`:`Når kampagneperioderne udløber: ${kr(tt.after)} kr./md.`;
+ const els=el.filter(e=>S.el[e.id]).map(e=>{const tr=+e.transport?` + transport og afgifter ${ore(e.transport)} øre/kWh`:'',ab=` · abonnement ${kr(e.abon)} kr./md. · uden binding`;
+  return {name:e.name,price:e.kind==='maaned'?`Fast elpris i ${monthName(e.month)}: ${ore(e.pris)} øre/kWh${tr}${ab}`:`Elpris efter markedet${+e.tillaeg?` (indkøbspris + ${ore(e.tillaeg)} øre/kWh)`:''}, lige nu fra ${ore(e.pris)} øre/kWh${tr}${ab}`}});
+ const first=S.contact.trim().split(/\s+/)[0];
+ return {greet:first?`Hej ${first}`:'Hej',intro:INTRO[S.situation](S.company.trim(),what()),lines,groups,tel:phoneLines(),
+  phones:S.situation==='forl'&&lines.length?'I kan selvfølgelig stadig købe telefoner og tilbehør med rabat, selvom I går ind i en binding – det påvirker ikke jeres muligheder der.':'',total:kr(tt.now),after,els,
+  close:'Hvis det ser godt ud, så svar blot på denne mail, så sætter jeg det hele i gang.',
+  contact:'Har du spørgsmål i mellemtiden, er du altid velkommen til at kontakte mig eller vores kundeservice på 80 40 40 30.'};
+}
+function html(){
+ const m=model(),FF='font-family:Calibri,Aptos,Arial,sans-serif;',F=FF+'font-size:11pt;color:#1F1F1F;line-height:1.5;';
+ const P=t=>`<p style="margin:0 0 14px;${F}">${t}</p>`;
+ const lab=(a,b)=>`<tr><td style="${FF}font-size:8.5pt;letter-spacing:1px;color:#8A7F81;padding:0 0 6px;border-bottom:1px solid #D9D2D3;">${a}</td><td style="${FF}font-size:8.5pt;letter-spacing:1px;color:#8A7F81;padding:0 0 6px;border-bottom:1px solid #D9D2D3;text-align:right;">${b}</td></tr>`;
+ const cell=`${F}padding:12px 0;border-bottom:1px solid #EEEAEA;vertical-align:top;`;
+ let h=`<div style="${F}">`+P(esc(m.greet)+',')+P(esc(m.intro));
+ if(m.lines.length){
+  h+=`<table cellpadding="0" cellspacing="0" border="0" width="560" style="border-collapse:collapse;width:100%;max-width:560px;margin:8px 0 6px;">`;
+  m.groups.forEach((g,gi)=>{if(gi)h+=`<tr><td colspan="2" style="height:16px;line-height:16px;font-size:1px;">&nbsp;</td></tr>`;h+=lab(g.label,gi?'':'PR. MD.');
+   h+=g.lines.map(l=>`<tr><td style="${cell}"><span style="font-weight:bold;">${l.qty} × ${esc(l.name)}</span><br><span style="font-size:10pt;color:#6B6466;">${esc(l.price)}</span></td><td style="${cell}text-align:right;white-space:nowrap;padding-left:16px;">${esc(l.total)}</td></tr>`).join('')});
+  h+=`<tr><td style="${F}padding:14px 0 2px;border-top:2px solid #470205;font-weight:bold;color:#470205;">Samlet pris pr. md.</td><td style="${F}padding:14px 0 2px;border-top:2px solid #470205;text-align:right;white-space:nowrap;font-weight:bold;color:#470205;font-size:13pt;">${esc(m.total)} kr.</td></tr>`;
+  if(m.after)h+=`<tr><td colspan="2" style="${FF}font-size:10pt;color:#6B6466;padding:0 0 4px;">${esc(m.after)}</td></tr>`;
+  h+=`</table>`;
+ }
+ if(m.els.length){
+  h+=`<table cellpadding="0" cellspacing="0" border="0" width="560" style="border-collapse:collapse;width:100%;max-width:560px;margin:18px 0 6px;">`+lab('EL','');
+  h+=m.els.map(l=>`<tr><td colspan="2" style="${cell}"><span style="font-weight:bold;">${esc(l.name)}</span><br><span style="font-size:10pt;color:#6B6466;">${esc(l.price)}</span></td></tr>`).join('')+`</table>`;
+ }
+ if(m.tel.length){
+  h+=`<table cellpadding="0" cellspacing="0" border="0" width="560" style="border-collapse:collapse;width:100%;max-width:560px;margin:18px 0 6px;">`+lab('TELEFONER',m.tel.some(t=>t.total)?'PRIS':'');
+  h+=m.tel.map(l=>`<tr><td style="${cell}"><span style="font-weight:bold;">${esc(l.name)}</span>${l.price?`<br><span style="font-size:10pt;color:#6B6466;">${esc(l.price)}</span>`:''}</td><td style="${cell}text-align:right;white-space:nowrap;padding-left:16px;">${esc(l.total)}</td></tr>`).join('')+`</table>`;
+ }
+ if(m.lines.length||m.els.length||m.tel.length)h+=`<p style="margin:6px 0 18px;${FF}font-size:9pt;color:#8A7F81;">Alle priser er ekskl. moms.${m.els.length&&elNote.trim()?' '+esc(elNote.trim()):''}</p>`;
+ if(m.phones)h+=P(esc(m.phones));
+ h+=P(esc(m.close))+P(esc(m.contact))+`<p style="margin:0;${F}">Med venlig hilsen</p></div>`;
+ return h;
+}
+function text(){
+ const m=model(),o=[m.greet+',','',m.intro,''];
+ m.groups.forEach(g=>{o.push(g.label.charAt(0)+g.label.slice(1).toLowerCase()+':');g.lines.forEach(l=>o.push(`${l.qty} × ${l.name}`,l.price,''))});
+ if(m.lines.length){o.push(`Samlet pris pr. md.: ${m.total} kr.`);if(m.after)o.push(m.after);o.push('')}
+ m.els.forEach(l=>o.push(l.name,l.price,''));
+ if(m.tel.length){o.push('Telefoner:');m.tel.forEach(l=>{o.push(l.name);if(l.price)o.push(l.price+(l.total?' – i alt '+l.total:''));o.push('')})}
+ if(m.lines.length||m.els.length||m.tel.length)o.push('Alle priser er ekskl. moms.'+(m.els.length&&elNote.trim()?' '+elNote.trim():''),'');
+ if(m.phones)o.push(m.phones,'');
+ o.push(m.close,'',m.contact,'','Med venlig hilsen');return o.join('\n');
+}
+function renderMail(){
+ const has=active().length||Object.keys(S.el).length||S.phones.length;
+ $('subject').textContent=subject();$('to').textContent=[S.contact.trim(),S.company.trim()].filter(Boolean).join(', ')||'Kunden';
+ $('mail').innerHTML=has?html():'<div class="empty"><div class="sk"><i style="width:30%"></i><i style="width:88%"></i><i style="width:72%"></i><i class="gap"></i><i style="width:100%"></i><i style="width:100%"></i><i style="width:64%"></i></div><p>Mailen skriver sig selv her, når du vælger produkter.</p></div>';
+ $('copy').disabled=!has;flashRows();
+ const st=el.filter(e=>S.el[e.id]&&elStale(e));$('stale').hidden=!st.length;
+ $('stale').textContent=st.length?`Elprisen for ${st.map(e=>e.name).join(' og ')} er ikke opdateret for ${monthName(curMonth())}. Opdatér den under Prisliste, før du sender.`:'';
+}
+let render=()=>{renderProducts();renderMail()};
+
+/* events */
+const left=document.querySelector('.left');
+left.addEventListener('click',e=>{
+ const er=e.target.closest('[data-el]');if(er&&e.target.closest('.pc-add')){const id=er.dataset.el;if(S.el[id])delete S.el[id];else{S.el[id]=true;sky.kick()}render();return}
+ const sb=e.target.closest('#sit button');if(sb){S.situation=sb.dataset.s;render();return}
+ const card=e.target.closest('.pc[data-pid]');
+ if(card){const q=e.target.closest('[data-q]');if(!q||q.disabled)return;const p=plans.find(x=>x.id===card.dataset.pid);if(!p)return;
+  const k=S.situation==='forl'?'forl':'ny',o=k==='ny'?'forl':'ny',ls=linesOf(p.id),up=+q.dataset.q>0,qr=q.getBoundingClientRect();
+  if(up){let it=ls[0];if(!it){it={key:uid(),pid:p.id,ny:0,forl:0,binding:sortT(p)[0].binding,mr:0};S.lines.push(it)}it[k]++}
+  else{const it=[...ls].reverse().find(l=>l[k]>0)||[...ls].reverse().find(l=>l[o]>0);if(it){if(it[k]>0)it[k]--;else it[o]--}}
+  cleanLines();render();if(up){sky.kick();const c=document.querySelector(`.pc[data-pid="${p.id}"]`);if(c)c.classList.add('pop');burst(qr.left+qr.width/2,qr.top+qr.height/2,22);beam(qr.left+qr.width/2,qr.top+qr.height/2);sfx.blip(linesOf(p.id).reduce((a,l)=>a+qty(l),0))}return}
+ const row=e.target.closest('.ol[data-key]');if(!row)return;const it=S.lines.find(l=>l.key===row.dataset.key);if(!it)return;const p=plans.find(x=>x.id===it.pid);
+ if(e.target.closest('[data-split]')){const used=linesOf(p.id).map(l=>+l.binding),nb=sortT(p).map(t=>+t.binding).find(b=>!used.includes(b));
+  const k=S.situation==='forl'?'forl':'ny',nl={key:uid(),pid:p.id,ny:0,forl:0,binding:nb??+it.binding,mr:0};nl[k]=1;
+  S.lines.splice(S.lines.indexOf(it)+1,0,nl);cleanLines();render();toast('Ny linje med anden binding tilføjet');return}
+ const n=e.target.closest('[data-n]');if(n){const[k,d]=n.dataset.n.split(':');it[k]=Math.max(0,(+it[k]||0)+(+d));cleanLines();render();return}
+ const b=e.target.closest('[data-bind]');if(b){it.binding=+b.dataset.bind;const mx=+trinOf(p,it.binding).max||0;if(it.mr>mx)it.mr=mx;render()}
+});
+left.addEventListener('change',e=>{if(!e.target.matches('[data-mr]'))return;const it=S.lines.find(l=>l.key===e.target.closest('.ol[data-key]').dataset.key);if(it){it.mr=+e.target.value;render()}});
+[['contact','contact'],['company','company']].forEach(([id,k])=>{const h=()=>{S[k]=$(id).value;renderMail();heroTitle()};$(id).addEventListener('input',h);$(id).addEventListener('change',h)});
+let tt;const toast=m=>{const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3000)};
+function selCopy(n){const s=getSelection(),r=document.createRange();r.selectNodeContents(n);s.removeAllRanges();s.addRange(r);let ok=false;try{ok=document.execCommand('copy')}catch(e){}if(ok)s.removeAllRanges();return ok}
+function copyPlain(t,msg){const fb=()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}a.remove();toast(ok?msg:'Kunne ikke kopiere. Markér teksten manuelt')};try{navigator.clipboard.writeText(t).then(()=>toast(msg)).catch(fb)}catch(e){fb()}}
+$('copy').addEventListener('click',()=>{
+ const stale=el.some(e=>S.el[e.id]&&elStale(e)),ok=()=>{celebrate();toast(stale?'Kopieret, men elprisen er ikke opdateret for denne måned':'Kopieret. Sæt ind i Outlook med Ctrl+V')};
+ const fb=()=>selCopy($('mail'))?ok():toast('Mailen er markeret. Tryk Ctrl+C');
+ try{if(!window.ClipboardItem)throw 0;navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html()],{type:'text/html'}),'text/plain':new Blob([text()],{type:'text/plain'})})]).then(ok).catch(fb)}catch(e){fb()}
+});
+$('copy-subj').addEventListener('click',()=>copyPlain(subject(),'Emnet er kopieret'));
+$('btn-new').addEventListener('click',()=>{S=fresh();['contact','company'].forEach(id=>$(id).value='');render();heroTitle();$('contact').focus()});
+
+/* prisliste */
+function renderPrices(){
+ $('el-note').value=elNote;
+ $('el-edit').innerHTML=el.map((e,i)=>`<tr data-i="${i}"><td><b>${esc(e.name)}</b></td><td><input id="ep-${i}" data-k="pris" inputmode="decimal" value="${e.pris||''}" style="width:90px"></td><td><input id="et-${i}" data-k="transport" inputmode="decimal" value="${e.transport||''}" style="width:80px"></td><td><input id="el2-${i}" data-k="tillaeg" inputmode="decimal" value="${e.tillaeg||''}" style="width:70px"></td><td><input id="ea-${i}" data-k="abon" inputmode="decimal" value="${e.abon||''}" style="width:90px"></td><td><input id="em-${i}" data-k="month" type="month" value="${esc(e.month)}" style="width:160px"></td></tr>`).join('');
+ const bs=[...new Set(plans.flatMap(p=>p.trin.map(t=>+t.binding)))].sort((a,b)=>b-a);
+ $('plan-view').innerHTML=`<thead><tr><th>Abonnement</th><th>Listepris</th>${bs.map(b=>`<th>${b?b+' mdr.':'Ingen binding'}</th>`).join('')}</tr></thead><tbody>`+
+  plans.map(p=>`<tr><td><b>${esc(p.name)}</b>${p.exp?'<small class="exp">Kampagne · udløber efter binding</small>':''}</td><td>${+p.list?kr(p.list):'<span style="color:var(--warn)">mangler</span>'}</td>${bs.map(b=>{const t=p.trin.find(x=>+x.binding===b);if(!t)return '<td>–</td>';
+   const top=+t.camp>0?`<b class="camp">${kr(t.camp)}</b>`:`<b>${kr(p.list)}</b>`,sub=[];if(+t.max>0)sub.push(`<em class="chip">rabat ≤ ${t.max}</em>`);if(+t.ny||+t.forl)sub.push(`<em class="chip int">tlf ${+t.ny||0} / ${+t.forl||0}</em>`);
+   return `<td>${top}${sub.length?`<div class="chips">${sub.join('')}</div>`:''}</td>`}).join('')}</tr>`).join('')+'</tbody>';
+}
+$('el-edit').addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;const x=el[+e.target.closest('tr').dataset.i];x[k]=k==='month'?e.target.value:num(e.target.value);store.set('ts9.el',el);render()});
+$('el-edit').addEventListener('change',e=>{if(e.target.dataset.k==='month'){el[+e.target.closest('tr').dataset.i].month=e.target.value;store.set('ts9.el',el);render()}});
+$('el-note').addEventListener('input',e=>{elNote=e.target.value;store.set('ts9.elnote',elNote);renderMail()});
+const HEAD=['Kategori','Abonnement','Listepris/md.','Binding','Kampagnepris/md.','Kampagne udløber','Maks. rabat/md.','Telefonrabat nyt','Telefonrabat forl.'];
+function toTSV(){const f=v=>+v?String(v).replace('.',','):'';return [HEAD,...plans.flatMap(p=>sortT(p).map(t=>[p.cat==='net'?'5G Internet':'Mobil',p.name,f(p.list),t.binding,f(t.camp),p.exp?'Ja':'Nej',f(t.max),f(t.ny),f(t.forl)]))].map(r=>r.join('\t')).join('\n')}
+function monthVal(v){v=String(v||'').trim();let m=v.match(/^(\d{4})-(\d{1,2})/);if(m)return m[1]+'-'+m[2].padStart(2,'0');m=v.match(/^(\d{1,2})[.\/-](\d{4})$/);if(m)return m[2]+'-'+m[1].padStart(2,'0');
+ const names=['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];m=v.toLowerCase().match(/([a-zæøå]+)\.?\s*(\d{4})/);if(m){const i=names.findIndex(n=>m[1].startsWith(n));if(i>=0)return m[2]+'-'+String(i+1).padStart(2,'0')}return ''}
+function parse(txt){
+ const rows=txt.split(/\r?\n/).filter(l=>l.trim()).map(l=>(l.includes('\t')?l.split('\t'):l.split(';')).map(s=>s.trim()));
+ const hi=rows.findIndex(r=>r.some(c=>/abonnement|produkt/i.test(c)));
+ const h=hi>=0?rows[hi]:[],f=re=>h.findIndex(c=>re.test(c));
+ if(hi>=0&&h.some(c=>/øre/i.test(c))){ /* el-fanen */
+  const ix={name:f(/produkt/i),pris:h.findIndex(c=>/øre/i.test(c)&&!/transport|tillæg/i.test(c)),transport:f(/transport/i),tillaeg:f(/tillæg/i),abon:f(/abonnement/i),month:f(/gælder|måned/i)};const out=[];
+  rows.forEach((r,i)=>{if(i===hi)return;const n=(r[ix.name]||'').toLowerCase();const e=el.find(x=>x.name.toLowerCase()===n);if(!e)return;
+   out.push({...e,pris:num(r[ix.pris]),transport:ix.transport>=0?num(r[ix.transport]):(e.transport||0),tillaeg:ix.tillaeg>=0?num(r[ix.tillaeg]):(e.tillaeg||0),abon:num(r[ix.abon]),month:monthVal(r[ix.month])||e.month})});
+  return {kind:'el',list:out,bad:0}}
+ let ix={cat:0,name:1,list:2,b:3,camp:4,max:5,ny:6,forl:7};
+ if(hi>=0)ix={cat:f(/kategori/i),name:f(/abonnement/i),list:f(/liste/i),b:f(/binding/i),camp:f(/kampagnepris/i),exp:f(/udløb/i),max:f(/maks|rabat\/md/i),ny:f(/nyt/i),forl:f(/forl/i)};
+ const g=(r,k)=>ix[k]>=0?(r[ix[k]]||''):'';const out=new Map();let bad=0;
+ rows.forEach((r,i)=>{if(i===hi)return;const name=g(r,'name');if(!name||!/\d/.test(g(r,'b'))){bad++;return}
+  const key=name.toLowerCase();if(!out.has(key))out.set(key,{id:'p-'+key.replace(/[^a-z0-9æøå]+/g,'-'),cat:/5g|net|internet/i.test(g(r,'cat'))?'net':'mobil',name,list:0,trin:[]});
+  const p=out.get(key);if(!p.list&&num(g(r,'list'))>0)p.list=num(g(r,'list'));if(/^j/i.test(g(r,'exp')))p.exp=true;
+  p.trin.push(T(Math.round(num(g(r,'b'))),num(g(r,'camp')),num(g(r,'max')),num(g(r,'ny')),num(g(r,'forl'))))});
+ return {kind:'plans',list:[...out.values()],bad};
+}
+let armed=false;
+$('imp-go').addEventListener('click',e=>{const res=parse($('imp').value),m=$('imp-msg');
+ if(!res.list.length){m.textContent='Fandt ingen rækker. Kopiér hele fanen fra Excel, inkl. overskrifter.';return}
+ if(res.kind==='el'){el=el.map(x=>res.list.find(y=>y.id===x.id)||x);store.set('ts9.el',el);$('imp').value='';m.textContent='';renderPrices();render();toast('Elpriserne er opdateret');return}
+ if(!armed){armed=true;e.target.textContent='Bekræft';m.textContent=`${res.list.length} abonnementer fundet${res.bad?`, ${res.bad} rækker sprunget over`:''}. Klik Bekræft for at erstatte.`;setTimeout(()=>{if(armed){armed=false;e.target.textContent='Indlæs'}},6000);return}
+ armed=false;e.target.textContent='Indlæs';plans=res.list;store.set('ts8.plans',plans);S.lines=[];$('imp').value='';m.textContent='';renderPrices();render();toast(`Prislisten er opdateret: ${res.list.length} abonnementer`)});
+$('imp-copy').addEventListener('click',()=>copyPlain(toTSV(),'Kopieret. Sæt ind i Excel med Ctrl+V'));
+const closeDr=()=>$('drawer').hidden=true;
+$('btn-prices').addEventListener('click',()=>{renderPrices();$('drawer').hidden=false});
+$('dr-close').addEventListener('click',closeDr);
+$('drawer').addEventListener('click',e=>{if(e.target.id==='drawer')closeDr()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDr()});
+
+/* tal der tæller op */
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches,shown={};
+function tween(id,to,fmt){const node=$(id),from=shown[id]??0;shown[id]=to;if(RM||from===to){node.textContent=fmt(to);return}
+ const t0=performance.now(),d=420;(function step(t){const k=Math.min(1,(t-t0)/d),e=1-Math.pow(1-k,3),v=from+(to-from)*e;node.textContent=fmt(k<1?Math.round(v):to);if(k<1)requestAnimationFrame(step)})(t0)}
+function heroTitle(){const c=S.company.trim();$('hero-h').innerHTML=c?`Tilbud til<br><em>${esc(c)}</em>`:'Et nyt tilbud,<br><em>klar på et minut.</em>'}
+
+/* nordlys */
+const sky={target:0,e:0,boost:0,kick(){this.boost=1}};
+(function(){const cv=$('sky');let gl=null;try{gl=cv.getContext('webgl',{antialias:false,premultipliedAlpha:false})}catch(e){}if(!gl)return;
+ const vs='attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+ const fs=`precision mediump float;uniform vec2 R;uniform float T,E;
+ float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+ float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1.,0.)),f.x),mix(h(i+vec2(0.,1.)),h(i+vec2(1.,1.)),f.x),f.y);}
+ float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n(p);p*=2.03;a*=.5;}return v;}
+ void main(){vec2 uv=gl_FragCoord.xy/R;uv.y=1.-uv.y;float ar=R.x/R.y;vec3 col=vec3(.043,.02,.024);
+  for(int i=0;i<4;i++){float fi=float(i);float x=uv.x*ar*.9+fi*1.37;
+   float y=.30+fi*.075+.11*sin(x*1.15+T*.13+fi*2.1)+.09*(fbm(vec2(x*.7,T*.045+fi*3.))-.5);
+   float d=uv.y-y;float cur=d<0.?exp(d*(5.5-fi*.6)):exp(-d*55.);
+   float st=.35+.85*fbm(vec2(x*16.+fi*7.,T*.35+fi));st*=.7+.3*sin(x*40.+T*1.3+fi*9.);
+   vec3 c=mix(vec3(.93,.03,.07),vec3(1.,.58,.62),clamp(-d*2.4,0.,1.));if(i==3)c=vec3(.42,.01,.03);
+   col+=c*cur*st*(.42-fi*.06)*(.75+1.3*E);}
+  col*=smoothstep(1.02,.45,uv.y);gl_FragColor=vec4(min(col,1.),1.);}`;
+ const sh=(t,src)=>{const o=gl.createShader(t);gl.shaderSource(o,src);gl.compileShader(o);return gl.getShaderParameter(o,gl.COMPILE_STATUS)?o:null};
+ const v=sh(gl.VERTEX_SHADER,vs),f=sh(gl.FRAGMENT_SHADER,fs);if(!v||!f)return;const pr=gl.createProgram();gl.attachShader(pr,v);gl.attachShader(pr,f);gl.linkProgram(pr);if(!gl.getProgramParameter(pr,gl.LINK_STATUS))return;
+ gl.useProgram(pr);const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+ const loc=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+ const uR=gl.getUniformLocation(pr,'R'),uT=gl.getUniformLocation(pr,'T'),uE=gl.getUniformLocation(pr,'E');
+ window.__gl=true;cv.classList.add('gl');let t=Math.random()*50,last=0,raf=0;
+ function size(){const r=cv.getBoundingClientRect();cv.width=Math.max(200,Math.round(r.width/2));cv.height=Math.max(100,Math.round(r.height/2));gl.viewport(0,0,cv.width,cv.height)}
+ function draw(){gl.uniform2f(uR,cv.width,cv.height);gl.uniform1f(uT,t);gl.uniform1f(uE,Math.min(1.6,sky.e*.9+sky.boost*.9));gl.drawArrays(gl.TRIANGLES,0,3)}
+ function loop(now){const dt=last?Math.min(.05,(now-last)/1000):.016;last=now;sky.e+=(sky.target-sky.e)*.03;sky.boost*=.965;t+=dt*(1+1.6*sky.e+3*sky.boost);draw();raf=requestAnimationFrame(loop)}
+ size();draw();if(!RM)raf=requestAnimationFrame(loop);addEventListener('resize',()=>{size();draw()});
+ document.addEventListener('visibilitychange',()=>{cancelAnimationFrame(raf);last=0;if(!document.hidden&&!RM)raf=requestAnimationFrame(loop)});
+})();
+(function(){if(window.__gl)return;const cv=$('sky'),cx=cv.getContext('2d');if(!cx)return;let w=0,h=0,raf=0,t=Math.random()*100;
+ const bands=[{c:[237,8,18],a:.55,y:.34,amp:.10,f:1.3,s:.00022,th:.20},{c:[150,4,12],a:.6,y:.48,amp:.08,f:.9,s:.00016,th:.26},{c:[255,92,100],a:.28,y:.26,amp:.06,f:2.1,s:.0003,th:.10},{c:[71,2,5],a:.8,y:.62,amp:.07,f:.7,s:.00012,th:.30}];
+ function size(){const r=cv.getBoundingClientRect();w=cv.width=Math.max(160,Math.round(r.width/4));h=cv.height=Math.max(80,Math.round(r.height/4))}
+ function draw(){cx.clearRect(0,0,w,h);cx.globalCompositeOperation='lighter';
+  bands.forEach((b,i)=>{cx.beginPath();const pts=40;for(let k=0;k<=pts;k++){const x=k/pts*w;const y=h*(b.y+b.amp*Math.sin(k/pts*Math.PI*2*b.f+t*b.s*1000+i)+.03*Math.sin(k/pts*17+t*.0011*1000*b.s*4));k?cx.lineTo(x,y):cx.moveTo(x,y)}
+   for(let k=pts;k>=0;k--){const x=k/pts*w;const y=h*(b.y+b.th+b.amp*.6*Math.sin(k/pts*Math.PI*2*b.f*.8+t*b.s*900+i*2));cx.lineTo(x,y)}
+   cx.closePath();const A=Math.min(1,b.a*(.6+.7*sky.e+.6*sky.boost));const g=cx.createLinearGradient(0,h*(b.y-.1),0,h*(b.y+b.th+.1));g.addColorStop(0,`rgba(${b.c},0)`);g.addColorStop(.45,`rgba(${b.c},${A})`);g.addColorStop(1,`rgba(${b.c},0)`);cx.fillStyle=g;cx.fill()});
+  cx.globalCompositeOperation='source-over'}
+ function loop(){sky.e+=(sky.target-sky.e)*.03;sky.boost*=.96;t+=16*(1+1.8*sky.e+3*sky.boost);draw();raf=requestAnimationFrame(loop)}
+ size();draw();if(!RM)loop();addEventListener('resize',()=>{size();draw()});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelAnimationFrame(raf);else if(!RM)loop()});
+})();
+
+/* nye/ændrede linjer i mailen blinker */
+let rowSnap=[];function flashRows(){const rows=[...$('mail').querySelectorAll('tr')],now=rows.map(r=>r.textContent);
+ if(rowSnap.length&&!RM)rows.forEach((r,i)=>{if(now[i]!==rowSnap[i]&&!rowSnap.includes(now[i]))r.classList.add('fl')});rowSnap=now}
+
+/* rullende tal */
+function odo(node,str){const prev=node.dataset.v||'';node.dataset.v=str;const L=str.length,P=prev.length;
+ node.setAttribute('aria-label',str+' kr.');
+ node.innerHTML=[...str].map((c,i)=>{const pc=prev[P-(L-i)];if(!/\d/.test(c))return `<span class="c">${c}</span>`;
+  const from=/\d/.test(pc||'')?+pc:0;return `<span class="d"><span class="s" data-to="${c}" style="transform:translateY(-${from}em)">${'0123456789'.split('').map(n=>`<b>${n}</b>`).join('')}</span></span>`}).join('');
+ requestAnimationFrame(()=>requestAnimationFrame(()=>node.querySelectorAll('.s').forEach(s=>s.style.transform=`translateY(-${s.dataset.to}em)`)))}
+
+/* løbebånd */
+function ticker(){const a=active(),items=a.length?a.map(({p,it})=>`<span class="hot">${qty(it)}× ${esc(p.name.toUpperCase())}</span><i>✦</i><span>${kr(unit(p,it))} PR. MD.</span><i>✦</i>`).join(''):
+ ['MOBIL','5G INTERNET','EL','NORLYS ERHVERV','TILBUD PÅ ET MINUT'].map(t=>`<span>${t}</span><i>✦</i>`).join('');
+ const k=items.repeat(Math.max(2,Math.ceil(8/Math.max(1,a.length))));$('tk').innerHTML=k+k;
+ if(!$('tk2').innerHTML){const z=['NORLYS ERHVERV','MOBIL','5G INTERNET','EL','DANSK ERHVERVSSUPPORT','80 40 40 30'].map(t=>`<span>${t}</span><i>✦</i>`).join('').repeat(3);$('tk2').innerHTML=z+z}}
+
+/* gnister */
+const fx=$('fx'),fc=fx.getContext('2d');let parts=[],fr=0;
+function fit(){fx.width=innerWidth*devicePixelRatio;fx.height=innerHeight*devicePixelRatio}fit();addEventListener('resize',fit);
+function beam(x0,y0){if(RM)return;const r=$('k-now').getBoundingClientRect(),x1=r.left+r.width*.5,y1=r.top+r.height*.5,cx=(x0+x1)/2+(Math.random()-.5)*200,cy=Math.min(y0,y1)-160;
+ for(let i=0;i<34;i++)parts.push({beam:1,x0,y0,x1,y1,cx:cx+(Math.random()-.5)*60,cy:cy+(Math.random()-.5)*60,t:-i*.018,l:1,r:1.2+Math.random()*2.2,c:i%5?'255,59,68':'255,255,255'});if(!fr)fr=requestAnimationFrame(tick)}
+function burst(x,y,n){if(RM)return;for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=2+Math.random()*6;parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-2,l:1,r:1.5+Math.random()*2.5,c:Math.random()<.25?'255,255,255':'255,59,68'})}if(!fr)fr=requestAnimationFrame(tick)}
+function tick(){const d=devicePixelRatio;fc.clearRect(0,0,fx.width,fx.height);parts=parts.filter(p=>p.l>0);
+ parts.forEach(p=>{if(p.beam){p.t+=.028;if(p.t<0)return;if(p.t>=1){p.l=0;if(!p.hit&&p.c==='255,255,255'){p.hit=1}return}const u=p.t,iu=1-u;p.x=iu*iu*p.x0+2*iu*u*p.cx+u*u*p.x1;p.y=iu*iu*p.y0+2*iu*u*p.cy+u*u*p.y1}else{p.x+=p.vx;p.y+=p.vy;p.vy+=.18;p.vx*=.98;p.l-=.022}fc.beginPath();fc.arc(p.x*d,p.y*d,p.r*d,0,7);fc.fillStyle=`rgba(${p.c},${Math.max(0,p.l)})`;fc.shadowBlur=12*d;fc.shadowColor=`rgba(${p.c},.9)`;fc.fill()});
+ fr=parts.length?requestAnimationFrame(tick):0;if(!fr)fc.clearRect(0,0,fx.width,fx.height)}
+function celebrate(){countUp();const r=$('copy').getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,140);sky.kick();sfx.whoosh();if(!RM){const bn=$('banner');bn.classList.remove('go');void bn.offsetWidth;bn.classList.add('go');const st=document.querySelector('.stage');st.classList.remove('shake');void st.offsetWidth;st.classList.add('shake')}const sh=document.querySelector('.sheet');sh.classList.remove('flash');void sh.offsetWidth;sh.classList.add('flash')}
+
+
+/* chokbølge */
+function hitTotal(){if(RM)return;const w=$('wave'),b=$('big');[w,b].forEach(n=>{n.classList.remove('go','hit');void n.offsetWidth});w.classList.add('go');b.classList.add('hit')}
+
+/* lyd (fra som standard) */
+const sfx=(()=>{let ac=null,on=store.get('ts.sound',false);const btn=$('btn-sound');
+ const ui=()=>{btn.setAttribute('aria-pressed',on);btn.textContent=on?'Lyd til':'Lyd fra'};ui();
+ const ctx=()=>{if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}return ac};
+ function tone(f,d,type,vol,slide){const a=ctx();if(!a||!on)return;const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,a.currentTime);if(slide)o.frequency.exponentialRampToValueAtTime(slide,a.currentTime+d);
+  g.gain.setValueAtTime(vol,a.currentTime);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+d);o.connect(g).connect(a.destination);o.start();o.stop(a.currentTime+d)}
+ btn.addEventListener('click',()=>{on=!on;store.set('ts.sound',on);ui();if(on){ctx()?.resume?.();tone(660,.15,'sine',.08)}});
+ return {blip:n=>tone(420+Math.min(n,16)*45,.12,'triangle',.07),whoosh:()=>{tone(180,.5,'sawtooth',.05,1400);setTimeout(()=>tone(880,.35,'sine',.07,1760),180)}}})();
+
+/* stjerner + stjerneskud */
+(function(){if(RM)return;const cv=$('stars'),c=cv.getContext('2d');let W,H,st=[],shoot=null,last=0;const d=Math.min(2,devicePixelRatio||1);
+ function size(){W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;st=Array.from({length:Math.round(W*H/9000)},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.2+.2,p:Math.random()*6.3,s:.5+Math.random()*1.5}))}
+ size();addEventListener('resize',size);
+ function f(t){if(t-last>33){last=t;c.setTransform(d,0,0,d,0,0);c.clearRect(0,0,W,H);
+  st.forEach(s=>{const a=.25+.55*(.5+.5*Math.sin(t*.001*s.s+s.p));c.fillStyle=`rgba(255,235,236,${a})`;c.fillRect(s.x,s.y,s.r,s.r)});
+  if(!shoot&&Math.random()<.006)shoot={x:Math.random()*W*.7+W*.2,y:Math.random()*H*.35,l:0};
+  if(shoot){shoot.l+=.035;const L=shoot.l,x=shoot.x-L*480,y=shoot.y+L*200,g=c.createLinearGradient(x,y,x+140,y-58);g.addColorStop(0,`rgba(255,255,255,${1-L})`);g.addColorStop(1,'rgba(255,59,68,0)');
+   c.strokeStyle=g;c.lineWidth=1.6;c.beginPath();c.moveTo(x,y);c.lineTo(x+140,y-58);c.stroke();if(L>=1)shoot=null}}
+  requestAnimationFrame(f)}requestAnimationFrame(f)})();
+
+/* parallax på kæmpeordet */
+if(!RM)addEventListener('scroll',()=>{$('bigword').style.setProperty('--par',(scrollY*.35)+'px')},{passive:true});
+
+/* navn, hilsen og dagens tilbud */
+const hello=()=>{const h=new Date().getHours();return h<10?'Godmorgen':h<13?'God formiddag':h<18?'God eftermiddag':'God aften'};
+let me=store.get('ts.name','');
+let dayMem=store.get('ts.day',null);
+function today(){const d=new Date().toISOString().slice(0,10),v=dayMem||{d,n:0};return v.d===d?v:{d,n:0}}
+function paintMe(){const n=me.trim(),f=n.split(/\s+/)[0];$('me-i').textContent=f?f[0].toUpperCase():'?';$('me-n').textContent=f||'Skriv dit navn';
+ $('eyebrow').textContent=`${hello()}${f?', '+f:''}`;const c=today().n;$('day-n').textContent=c;$('day').hidden=!c}
+$('btn-me').addEventListener('click',()=>{const w=$('me-edit');w.hidden=false;const i=$('me-in');i.value=me;i.focus();i.select()});
+function saveMe(){me=$('me-in').value.trim();store.set('ts.name',me);$('me-edit').hidden=true;paintMe()}
+$('me-in').addEventListener('keydown',e=>{if(e.key==='Enter')saveMe();if(e.key==='Escape')$('me-edit').hidden=true});
+$('me-in').addEventListener('blur',saveMe);
+function countUp(){const t=today();t.n++;dayMem=t;store.set('ts.day',t);paintMe();const d=$('day');d.classList.remove('bump');void d.offsetWidth;d.classList.add('bump')}
+
+/* genveje: Ctrl/⌘+Enter kopierer, Alt+N nyt tilbud */
+addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'&&!$('copy').disabled){e.preventDefault();$('copy').click()}
+ if(e.altKey&&(e.key==='n'||e.key==='N')){e.preventDefault();$('btn-new').click()}});
+
+/* intro: horisontlinje → partikler samler NORLYS → flyv igennem */
+let introOn=false;
+function playIntro(){if(RM||introOn)return;introOn=true;const it=$('intro'),cv=$('ic'),c=cv.getContext('2d'),stage=document.querySelector('.stage');
+ it.hidden=false;it.classList.remove('out','sub','go');void it.offsetWidth;it.classList.add('go');const f=me.trim().split(/\s+/)[0];$('intro-sub').textContent=f?`${hello()}, ${f}`:'Erhverv · Tilbudsstudio';
+ const d=Math.min(2,devicePixelRatio||1),W=innerWidth,H=innerHeight;cv.width=W*d;cv.height=H*d;c.setTransform(d,0,0,d,0,0);
+ let P=[],t0=0,raf=0,done=false;
+ const build=()=>{const o=document.createElement('canvas'),fs=Math.min(W*.17,240),ox=o.getContext('2d');o.width=W;o.height=H;
+  ox.font=`700 ${fs}px Unbounded, "Arial Black", sans-serif`;ox.textAlign='center';ox.textBaseline='middle';ox.fillStyle='#fff';ox.fillText('NORLYS',W/2,H*.45);
+  const st=Math.max(3,Math.round(fs/48)),img=ox.getImageData(0,0,W,H).data;
+  for(let y=0;y<H;y+=st)for(let x=0;x<W;x+=st)if(img[(y*W+x)*4+3]>128)P.push({tx:x,ty:y,sx:W/2+(Math.random()-.5)*W*.8,sy:H*.62+(Math.random()-.5)*6,dl:(x/W)*.45+Math.random()*.25,r:st*.42+Math.random()*st*.25,ph:Math.random()*6.3})};
+ const ease=k=>k>=1?1:1-Math.pow(2,-10*k);
+ function frame(now){if(!t0)t0=now;const t=(now-t0)/1000;c.clearRect(0,0,W,H);
+  const g=Math.min(1,t/1.2),rg=c.createRadialGradient(W/2,H*.62,0,W/2,H*.62,W*.6*g+1);rg.addColorStop(0,`rgba(237,8,18,${.35*g})`);rg.addColorStop(1,'rgba(237,8,18,0)');c.fillStyle=rg;c.fillRect(0,0,W,H);
+  const sweep=(t-1.7)*W*1.1;
+  for(const p of P){const k=Math.max(0,Math.min(1,(t-.45-p.dl)/1.05)),e=ease(k);if(k<=0)continue;
+   const x=p.sx+(p.tx-p.sx)*e,y=p.sy+(p.ty-p.sy)*e-Math.sin(e*Math.PI)*H*.12;
+   const hot=Math.max(0,1-Math.abs(x-sweep)/70),wh=Math.min(1,e*.4+hot*1.2);
+   c.fillStyle=`rgba(255,${Math.round(40+215*wh)},${Math.round(50+205*wh)},${Math.min(1,.25+e*.75)*(.8+.2*Math.sin(t*9+p.ph))})`;
+   if(hot>.3){c.shadowBlur=14;c.shadowColor='#FF3B44'}else c.shadowBlur=0;
+   c.fillRect(x-p.r/2,y-p.r/2,p.r,p.r)}
+  c.shadowBlur=0;if(t>1.55&&!it.classList.contains('sub'))it.classList.add('sub');
+  if(t>2.9)return finish();raf=requestAnimationFrame(frame)}
+ function finish(){if(done)return;done=true;cancelAnimationFrame(raf);it.classList.add('out');stage.classList.remove('enter');void stage.offsetWidth;stage.classList.add('enter');sky.kick();sfx.whoosh&&0;
+  setTimeout(()=>{it.hidden=true;introOn=false},950)}
+ it.onclick=finish;const k=e=>{finish();removeEventListener('keydown',k)};addEventListener('keydown',k);
+ Promise.race([document.fonts?document.fonts.load('700 100px Unbounded'):0,new Promise(r=>setTimeout(r,700))]).then(()=>{build();raf=requestAnimationFrame(frame)});
+}
+(function(){let seen=false;try{seen=sessionStorage.getItem('ts.intro2')==='1';sessionStorage.setItem('ts.intro2','1')}catch(e){}if(!seen)playIntro()})();
+document.querySelector('.mark').addEventListener('click',playIntro);
+
+/* telefoner */
+let phQ=1,phKnown=store.get('ts.phmodels',[]);
+function paintPhList(){$('ph-list').innerHTML=phKnown.map(m=>`<option value="${esc(m)}"></option>`).join('')}
+function renderPhones(){
+ $('ph-lines').innerHTML=S.phones.map(f=>{const pr=+f.price||0,m=f.pay!=='once';return `<div class="phl" data-ph="${f.key}">${ICO.phone}<div><b>${f.qty} × ${esc(f.model)}</b><span>${pr?(m?`${kr(pr)} kr./md. pr. stk. i ${f.pay} mdr.`:`${kr(pr)} kr. pr. stk. · engangsbeløb`):'Uden pris i mailen'}</span></div><em>${pr?(m?kr(f.qty*pr)+' kr./md.':kr(f.qty*pr)+' kr.'):''}</em><button type="button" data-phrm="1" aria-label="Fjern ${esc(f.model)}">✕</button></div>`}).join('');
+ const tr=totals().once,av=$('ph-avail');av.hidden=!tr;av.innerHTML=tr?`${ICO.phone}<span>Telefonrabat til rådighed i dette tilbud: <b>${kr(tr)} kr.</b> · internt, brug den i telefonprisen</span>`:'';
+}
+const _render=render;render=function(){_render();renderPhones()};
+function addPhone(){const model=$('ph-model').value.trim();if(!model){$('ph-model').focus();toast('Skriv hvilken telefon');return}
+ S.phones.push({key:uid(),model,qty:phQ,price:num($('ph-price').value),pay:$('ph-pay').value});
+ if(!phKnown.includes(model)){phKnown=[model,...phKnown].slice(0,30);store.set('ts.phmodels',phKnown);paintPhList()}
+ $('ph-model').value='';$('ph-price').value='';phQ=1;$('ph-q').textContent=1;sky.kick();render();$('ph-model').focus()}
+$('ph-add').addEventListener('click',addPhone);
+['ph-model','ph-price'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addPhone()}}));
+$('ph-plus').addEventListener('click',()=>{phQ=Math.min(99,phQ+1);$('ph-q').textContent=phQ});
+$('ph-minus').addEventListener('click',()=>{phQ=Math.max(1,phQ-1);$('ph-q').textContent=phQ});
+$('ph-lines').addEventListener('click',e=>{if(!e.target.closest('[data-phrm]'))return;const k=e.target.closest('[data-ph]').dataset.ph;S.phones=S.phones.filter(f=>f.key!==k);render()});
+paintPhList();
+
+paintMe();render();heroTitle();
+</script>
+
+</body></html>
