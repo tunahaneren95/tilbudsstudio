@@ -22,7 +22,9 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 @keyframes hmSwing2{0%{opacity:0;transform:translateY(-60%) rotate(40deg) scale(.8)}12%{opacity:1;transform:translateY(-8%) rotate(28deg) scale(1)}28%{transform:translateY(-12%) rotate(38deg) scale(1)}35%{transform:translateY(0) rotate(-88deg) scale(1)}38%{transform:translateY(0) rotate(-78deg) scale(1)}42%{transform:translateY(0) rotate(-84deg) scale(1)}48%{transform:translateY(0) rotate(-81deg) scale(1)}80%{opacity:1;transform:translateY(0) rotate(-81deg) scale(1)}100%{opacity:0;transform:translateY(-70%) rotate(-20deg) scale(1)}}
 </style>`);
 (function(){
- const img=new Image();img.src='hammer.png';
+ const img=new Image();
+ /* billedet ligger som tekst i hammer.js (GitHub-forbindelsen kan kun lægge tekstfiler op) */
+ const sc=document.createElement('script');sc.src='hammer.js?v=1';sc.onload=()=>{if(window.HAMMER_SRC)img.src=window.HAMMER_SRC};sc.onerror=()=>{img.src='hammer.png'};document.head.appendChild(sc);
  const org=lxHammer;
  lxHammer=function(){org();const o=document.querySelector('.hm-ov');if(!o)return;const svg=o.querySelector('svg.hm-tool');
   if(!img.complete||!img.naturalWidth){return}
