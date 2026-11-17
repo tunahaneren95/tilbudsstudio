@@ -102,7 +102,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 .si-ov{position:fixed;inset:0;z-index:96;pointer-events:none;overflow:hidden;display:grid;place-items:center}
 .si-bg{position:absolute;inset:0;background:radial-gradient(60% 50% at 50% 70%,rgba(237,8,18,.45),rgba(8,2,3,.8) 70%);opacity:0;animation:siBg 3.8s ease forwards}
 @keyframes siBg{0%{opacity:0}10%{opacity:1}80%{opacity:1}100%{opacity:0}}
-.si-fig{position:absolute;left:50%;bottom:12vh;width:min(260px,42vw);margin-left:calc(min(260px,42vw)/-2);transform-origin:50% 100%;will-change:transform;animation:siJump 3.8s cubic-bezier(.3,.7,.3,1) forwards}
+.si-fig{position:absolute;left:50%;bottom:12vh;width:min(300px,46vw);margin-left:calc(min(300px,46vw)/-2);transform-origin:50% 100%;will-change:transform;animation:siJump 3.8s cubic-bezier(.3,.7,.3,1) forwards}
 .si-fig svg{display:block;width:100%;height:auto;overflow:visible}
 @keyframes siJump{0%{transform:translateY(120%) scaleX(1)}12%{transform:translateY(0) scale(1,1)}17%{transform:translateY(4%) scale(1.08,.88)}30%{transform:translateY(-42%) scaleX(1)}36%{transform:translateY(-50%) scaleX(-1)}42%{transform:translateY(-44%) scaleX(1)}50%{transform:translateY(0) scale(1.14,.82)}56%{transform:translateY(0) scale(.97,1.04)}62%{transform:translateY(0) scale(1)}88%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(10%) scale(1);opacity:0}}
 .si-arm{transform-box:fill-box;will-change:transform}
@@ -131,22 +131,40 @@ body.si-shock .stage{animation:hmShake2 .6s cubic-bezier(.36,.07,.19,.97)}
 function lxSiuuu(){
  document.querySelectorAll('.si-ov').forEach(x=>x.remove());
  const o=document.createElement('div');o.className='si-ov';o.setAttribute('aria-hidden','true');
- /* stiliseret spiller set bagfra i den berømte landing: arme ud, ben spredt, nr. 7 på ryggen */
+ /* CR7 i Portugal-trøje: den berømte landing med armene ud, benene spredt og hagen op */
  o.innerHTML=`<div class="si-bg"></div><div class="si-flash"></div><i class="si-ring"></i><i class="si-ring b"></i>
- <div class="si-fig"><svg viewBox="0 0 200 300" aria-hidden="true">
-  <defs><linearGradient id="siJ" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF2A33"/><stop offset="1" stop-color="#B0050D"/></linearGradient></defs>
-  <ellipse cx="100" cy="296" rx="70" ry="6" fill="rgba(0,0,0,.45)"/>
-  <path d="M78 180 L52 236 L44 288" fill="none" stroke="#2A1416" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M122 180 L148 236 L156 288" fill="none" stroke="#2A1416" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M49 250 L45 286" stroke="#ED0812" stroke-width="21" stroke-linecap="round"/><path d="M151 250 L155 286" stroke="#ED0812" stroke-width="21" stroke-linecap="round"/>
-  <path d="M36 292 h20 M144 292 h20" stroke="#111" stroke-width="10" stroke-linecap="round"/>
-  <g class="si-arm l"><path d="M74 74 L44 118 L22 150" fill="none" stroke="url(#siJ)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><path d="M40 124 L22 150" stroke="#2A1416" stroke-width="15" stroke-linecap="round"/></g>
-  <g class="si-arm r"><path d="M126 74 L156 118 L178 150" fill="none" stroke="url(#siJ)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><path d="M160 124 L178 150" stroke="#2A1416" stroke-width="15" stroke-linecap="round"/></g>
-  <path d="M68 66 Q100 58 132 66 L140 150 Q100 158 60 150 Z" fill="url(#siJ)"/>
-  <path d="M60 148 Q100 156 140 148 L146 186 L106 188 L100 176 L94 188 L54 186 Z" fill="#F7F2F2"/>
-  <text x="100" y="128" text-anchor="middle" font-family="Unbounded,Arial Black,sans-serif" font-weight="900" font-size="56" fill="#fff">7</text>
-  <rect x="91" y="48" width="18" height="16" rx="5" fill="#2A1416"/>
-  <circle cx="100" cy="34" r="21" fill="#2A1416"/><path d="M80 30 Q84 10 100 12 Q118 10 121 30 Q110 20 100 22 Q88 20 80 30Z" fill="#120809"/>
+ <div class="si-fig"><svg viewBox="0 0 240 340" aria-hidden="true">
+ <defs>
+  <linearGradient id="sisk" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#B0714A"/><stop offset=".5" stop-color="#D9A07A"/><stop offset="1" stop-color="#A2643E"/></linearGradient>
+  <linearGradient id="sish" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EE2430"/><stop offset="1" stop-color="#A5070F"/></linearGradient>
+  <linearGradient id="sipa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#11744A"/><stop offset="1" stop-color="#084A2E"/></linearGradient>
+ </defs>
+ <ellipse cx="120" cy="333" rx="96" ry="6" fill="rgba(0,0,0,.45)"/>
+ <path d="M100 194 C90 226 72 248 64 274" fill="none" stroke="url(#sisk)" stroke-width="26" stroke-linecap="round"/>
+ <path d="M140 194 C150 226 168 248 176 274" fill="none" stroke="url(#sisk)" stroke-width="26" stroke-linecap="round"/>
+ <path d="M64 272 L57 316" stroke="#E8202B" stroke-width="19" stroke-linecap="round"/>
+ <path d="M176 272 L183 316" stroke="#E8202B" stroke-width="19" stroke-linecap="round"/>
+ <path d="M64.5 276 l-1.6 9 M175.5 276 l1.6 9" stroke="#11744A" stroke-width="19"/>
+ <path d="M38 327 Q42 314 57 315 Q67 317 67 327 Z" fill="#F4F4F4"/><path d="M202 327 Q198 314 183 315 Q173 317 173 327 Z" fill="#F4F4F4"/>
+ <path d="M38 327 h30 M172 327 h30" stroke="#111" stroke-width="5" stroke-linecap="round"/>
+ <path d="M86 166 L154 166 L166 214 L126 219 L120 199 L114 219 L74 214 Z" fill="url(#sipa)"/>
+ <path d="M76 208 L114 213 M164 208 L126 213" stroke="#E8202B" stroke-width="3"/>
+ <g class="si-arm l"><path d="M64 110 L38 150 L26 166" fill="none" stroke="url(#sisk)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 78 Q70 90 62 112" fill="none" stroke="url(#sish)" stroke-width="24" stroke-linecap="round"/><path d="M53 108 l16 8" stroke="#11744A" stroke-width="3"/><path d="M14 168 q4 -10 14 -6 q8 4 6 14 q-4 8 -12 6 q-8 -4 -8 -14Z" fill="#C98B62"/></g>
+ <g class="si-arm r"><path d="M176 110 L202 150 L214 166" fill="none" stroke="url(#sisk)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/><path d="M156 78 Q170 90 178 112" fill="none" stroke="url(#sish)" stroke-width="24" stroke-linecap="round"/><path d="M187 108 l-16 8" stroke="#11744A" stroke-width="3"/><path d="M226 168 q-4 -10 -14 -6 q-8 4 -6 14 q4 8 12 6 q8 -4 8 -14Z" fill="#C98B62"/></g>
+ <path d="M82 74 Q120 62 158 74 Q166 96 160 118 Q154 142 152 170 Q120 176 88 170 Q86 142 80 118 Q74 96 82 74 Z" fill="url(#sish)"/>
+ <path d="M96 96 Q108 104 118 98 M122 98 Q132 104 144 96" stroke="rgba(0,0,0,.2)" stroke-width="2.5" fill="none"/>
+ <path d="M104 70 L120 88 L136 70" fill="none" stroke="#11744A" stroke-width="5" stroke-linejoin="round"/>
+ <path d="M106 70 L120 84 L134 70 Z" fill="url(#sisk)"/>
+ <text x="120" y="150" text-anchor="middle" font-family="Unbounded,Arial Black,sans-serif" font-weight="900" font-size="30" fill="#FFD24A">7</text>
+ <path d="M108 52 L107 72 L133 72 L132 52 Z" fill="url(#sisk)"/>
+ <path d="M100 34 Q99 50 104 58 Q112 68 120 68 Q128 68 136 58 Q141 50 140 34 Q138 18 120 16 Q102 18 100 34 Z" fill="url(#sisk)"/>
+ <path d="M112 52 Q120 46 128 52 Q127 62 120 63 Q113 62 112 52 Z" fill="#3A1410"/><path d="M114 53 h12" stroke="#fff" stroke-width="2"/>
+ <path d="M107 38 q4 -2.5 8 0 M125 38 q4 -2.5 8 0" stroke="#2A1A12" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+ <path d="M105 33 l11 -1 M124 32 l11 1" stroke="#2A1A12" stroke-width="3.2" stroke-linecap="round"/>
+ <path d="M119 40 l-2 8 h4" stroke="#9A5A36" stroke-width="1.6" fill="none"/>
+ <path d="M99 34 Q98 24 102 20 L103 30 Z M141 34 Q142 24 138 20 L137 30 Z" fill="#4A3324"/>
+ <path d="M101 24 Q100 6 116 2 Q134 -2 140 12 Q143 18 139 26 Q132 14 120 15 Q108 15 101 24 Z" fill="#1A0F0A"/>
+ <path d="M108 8 Q122 -6 140 6 Q132 0 120 2 Q112 3 108 8Z" fill="#2E1C12"/>
  </svg></div>
 `;
  document.body.appendChild(o);
@@ -166,4 +184,16 @@ function lxSiuuu(){
  const send=lxSendOrder;
  lxSendOrder=async function(){const nr=LX.of&&LX.of.nr,el=LX.of&&+LX.of.el||0;await send.apply(this,arguments);if(LX.of&&LX.of.nr!==nr)setTimeout(lxSiuuu,el>0?2500:0)};
  addEventListener('keydown',e=>{if(e.altKey&&(e.key==='s'||e.key==='S')){e.preventDefault();lxSiuuu()}});
+})();
+
+/* Forlængelse: kort intro som kollegerne ønsker, ental/flertal, ingen telefon-linje */
+(function(){
+ const antal=()=>{try{return active().reduce((n,{it})=>n+(+it.ny||0)+(+it.forl||0),0)}catch(e){return 1}};
+ INTRO.forl=()=>`Tak for en god samtale. Som lovet sender jeg her tilbuddet på at forlænge ${antal()>1?'dine abonnementer':'dit abonnement'}.`;
+ const mo=model;model=function(){const m=mo.apply(this,arguments);
+  if(S.situation==='forl'){m.phones='';
+   /* alt står under "Nye abonnementer", som i kollegernes skabelon */
+   if(m.groups.length){const alle=m.groups.flatMap(g=>g.lines);m.groups=[{label:'NYE ABONNEMENTER',lines:alle}]}}
+  return m};
+ try{renderMail()}catch(e){}
 })();
