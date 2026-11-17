@@ -59,3 +59,6 @@ body.hm-shock .stage{animation:hmShake2 .7s cubic-bezier(.36,.07,.19,.97)!import
   const o=document.querySelector('.hm-ov');if(o&&!o.querySelector('.hm-zap')){const z=document.createElement('div');z.className='hm-zap';o.prepend(z)}
  };
 })();
+
+/* 📅 Kalender */
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'kalender.js?v='+Math.floor(Date.now()/6e4)}));
