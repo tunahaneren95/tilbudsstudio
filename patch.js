@@ -157,3 +157,81 @@ function lxHammer(){
  $('lx-admin').addEventListener('click',e=>{const g=e.target.closest('[data-god]');if(!g||!LX.adm)return;const o=(LX.adm.ordrer||[]).find(x=>x.id===g.dataset.god);if(o&&o.el>0)setTimeout(lxHammer,250)},true);
  addEventListener('keydown',e=>{if(e.altKey&&(e.key==='e'||e.key==='E')){e.preventDefault();lxHammer()}});
 })();
+
+/* Topbar: rigtigt Norlys-logo, ingen lyd-knap og intet "skriv dit navn" */
+document.head.insertAdjacentHTML('beforeend',`<style>
+.mark.nl{gap:0;cursor:pointer}
+.mark.nl svg{height:24px;width:auto;display:block;fill:#fff;filter:drop-shadow(0 0 18px rgba(237,8,18,.35));transition:filter .3s,transform .3s}
+.mark.nl:hover svg{filter:drop-shadow(0 0 22px rgba(255,59,68,.8));transform:scale(1.03)}
+@media (max-width:560px){.mark.nl svg{height:18px}}
+#btn-sound,.mewrap{display:none!important}
+</style>`);
+(function(){const m=document.querySelector('.mark'),p=$('norlysPath');if(!m||!p)return;
+ m.classList.add('nl');m.setAttribute('aria-label','Norlys');m.setAttribute('title','Afspil intro igen');
+ m.innerHTML=`<svg viewBox="0 0 513 98" role="img" aria-label="Norlys"><path d="${p.getAttribute('d')}"/></svg>`})();
+
+/* Login-port: man skal logge ind, så snart raketten er landet */
+document.head.insertAdjacentHTML('beforeend',`<style>
+.gate{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,rgba(237,8,18,.28),rgba(11,5,6,.92) 60%);backdrop-filter:blur(6px);animation:gIn .6s ease both}
+@keyframes gIn{from{opacity:0}}
+.gate.out{animation:gOut .55s ease forwards}
+@keyframes gOut{to{opacity:0;transform:scale(1.04)}}
+.g-box{position:relative;width:min(460px,100%);border-radius:30px;padding:34px 30px 28px;background:linear-gradient(165deg,#22090C,#0D0506);border:1px solid rgba(255,90,98,.35);box-shadow:0 60px 120px -40px rgba(237,8,18,.6),inset 0 1px 0 rgba(255,255,255,.08);overflow:hidden;animation:gPop .8s cubic-bezier(.2,1.3,.4,1) .1s both}
+@keyframes gPop{from{opacity:0;transform:translateY(40px) scale(.94)}}
+.g-box::before{content:"";position:absolute;right:-90px;top:-90px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(255,59,68,.45),transparent 65%)}
+.g-box>*{position:relative}
+.g-logo{height:22px;fill:#fff;margin-bottom:22px;display:block}
+.g-hat{position:absolute;right:18px;top:18px;width:84px;transform:rotate(14deg);filter:drop-shadow(0 10px 16px rgba(0,0,0,.6));animation:gHat 1s cubic-bezier(.2,1.5,.4,1) .45s both}
+@keyframes gHat{from{opacity:0;transform:translateY(-60px) rotate(-30deg)}}
+.g-box h2{font-family:var(--display);font-size:clamp(30px,6vw,40px);line-height:.95;letter-spacing:-.04em;margin:0 0 10px}
+.g-box h2 em{font-style:normal;background:linear-gradient(92deg,#fff,#FFB3B7 55%,#FF3B44);-webkit-background-clip:text;background-clip:text;color:transparent}
+.g-box>p{color:var(--muted);margin:0 0 20px;font-size:14px}
+.g-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid var(--edge);margin-bottom:16px}
+.g-tabs button{border:0;border-radius:10px;padding:11px;background:none;font-weight:700;font-size:13px;cursor:pointer;color:var(--muted)}
+.g-tabs button.on{background:var(--red);color:#fff;box-shadow:0 8px 20px -8px var(--red-glow)}
+.g-box .f{margin-bottom:12px}
+.g-err{color:#FF6B72;font-size:13px;font-weight:600;min-height:18px;margin:2px 0 8px}
+.g-go{width:100%;font-family:var(--display);font-size:15px;padding:17px}
+.g-skip{display:block;margin:14px auto 0;background:none;border:0;color:var(--dim);font-size:12px;text-decoration:underline;cursor:pointer}
+.g-note{color:var(--dim);font-size:11.5px;margin:12px 0 0;text-align:center}
+</style>`);
+function lxGate(){
+ if(!LX.api||LX.tok||document.querySelector('.gate'))return;
+ const d=document.createElement('div');d.className='gate';let mode='login';
+ const nm=LX.me?LX.me.navn:(me||'');
+ d.innerHTML=`<div class="g-box" role="dialog" aria-modal="true" aria-labelledby="g-h">
+  <img class="g-hat" src="${HAT()}" alt="">
+  <svg class="g-logo" viewBox="0 0 513 98" aria-label="Norlys"><path d="${$('norlysPath').getAttribute('d')}"/></svg>
+  <h2 id="g-h">Velkommen<br><em>ombord.</em></h2>
+  <p>Log ind for at komme i gang. Første gang opretter du bare en profil med dit navn og en PIN.</p>
+  <div class="g-tabs"><button type="button" data-t="login" class="on">Log ind</button><button type="button" data-t="opret">Opret profil</button></div>
+  <label class="f">Dit navn<input id="g-n" autocomplete="name" placeholder="Fornavn Efternavn" value="${esc(nm)}"></label>
+  <label class="f">PIN (4-8 cifre)<input id="g-p" type="password" inputmode="numeric" maxlength="8" autocomplete="current-password" placeholder="••••"></label>
+  <p class="g-err" id="g-e"></p>
+  <button class="primary g-go" type="button" id="g-go">Log ind</button>
+  <p class="g-note">Brug ikke din Norlys-adgangskode. PIN'en gemmes krypteret.</p>
+  <button class="g-skip" type="button" id="g-skip" hidden>Fortsæt uden login</button></div>`;
+ document.body.appendChild(d);
+ const go=d.querySelector('#g-go'),er=d.querySelector('#g-e');
+ d.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{mode=b.dataset.t;d.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x===b));go.textContent=mode==='login'?'Log ind':'Opret profil';d.querySelector('#g-p').autocomplete=mode==='login'?'current-password':'new-password';er.textContent=''});
+ const submit=async()=>{er.textContent='';go.disabled=true;go.textContent='Et øjeblik…';
+  try{const j=await lapi(mode,{navn:d.querySelector('#g-n').value,pin:d.querySelector('#g-p').value});
+   LX.tok=j.token;store.set('ts.ltok',j.token);lxSetMe(j.mig);
+   me=j.mig.navn.split(' ')[0];store.set('ts.name',me);try{paintMe();heroTitle()}catch(e){}
+   const r=go.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,120);try{sky.kick()}catch(e){}
+   d.classList.add('out');setTimeout(()=>d.remove(),560);
+   toast(mode==='opret'?'Velkommen ombord, '+me:'Godt at se dig, '+me);lxSync()}
+  catch(e){er.textContent=e.message;go.disabled=false;go.textContent=mode==='login'?'Log ind':'Opret profil';
+   if(/forbindelse|svarede ikke/i.test(e.message))d.querySelector('#g-skip').hidden=false}};
+ go.onclick=submit;d.querySelectorAll('input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')submit()}));
+ d.querySelector('#g-skip').onclick=()=>{d.classList.add('out');setTimeout(()=>d.remove(),560)};
+ setTimeout(()=>d.querySelector(nm?'#g-p':'#g-n').focus(),400);
+}
+(function(){
+ const vent=()=>{const it=$('intro');if((it&&!it.hidden)||(typeof introOn!=='undefined'&&introOn)){setTimeout(vent,150);return}setTimeout(lxGate,250)};
+ vent();
+ const ud=lxLogout;lxLogout=function(s){ud(s);setTimeout(lxGate,300)};
+})();
+
+/* nye funktioner lægges i extra.js, så denne fil ikke skal sendes igen */
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'extra.js?v='+Math.floor(Date.now()/6e4)}));
