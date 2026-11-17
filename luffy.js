@@ -1,6 +1,6 @@
 /* ================= LUFFY POINTS ================= */
-/* Indsæt web-app-URL'en fra Google Apps Script her, så virker det for alle */
-const LUFFY_API='https://script.google.com/macros/s/AKfycbwhNBhOaeH743vg6EL2gqHDiCWJxbiZ1jW0-n7u5sqFFH4D6yzsG5VQt8-rThrR38R77Q/exec';
+/* Linket til Google-scriptet ligger i api.txt, så det kan skiftes uden at røre denne fil */
+const LUFFY_API=(()=>{const fb='https://script.google.com/macros/s/AKfycbw2ynvchCud9Bb6LM_v7_W7OkS0GaPFNOVSeV7zXJsDAKfyvD7JsmWjLyp-_2SApiXRSQ/exec';if(!location.protocol.startsWith('http'))return fb;try{const x=new XMLHttpRequest();x.open('GET','api.txt?v='+Date.now(),false);x.send();const t=(x.responseText||'').trim();if(x.status===200&&/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(t))return t}catch(e){}return fb})();
 const LX={api:LUFFY_API||store.get('ts.lapi',''),tok:store.get('ts.ltok',''),me:store.get('ts.lme',null),items:[],rules:null,codes:[],cart:store.get('ts.lcart',{}),board:null,mode:'md',admin:'',adm:null,offer:Math.random().toString(36).slice(2,10)};
 try{LX.admin=sessionStorage.getItem('ts.ladm')||''}catch(e){}
 /* ekstra stil, der kan opdateres uden ny index.html */
