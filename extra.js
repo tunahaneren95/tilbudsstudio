@@ -194,6 +194,8 @@ function lxSiuuu(){
   if(S.situation==='forl'){m.phones='';
    /* alt står under "Nye abonnementer", som i kollegernes skabelon */
    if(m.groups.length){const alle=m.groups.flatMap(g=>g.lines);m.groups=[{label:'NYE ABONNEMENTER',lines:alle}]}}
+  /* samme opsætning på alle abonnementer: "x kr./md. i 36 måneder" */
+  m.groups.forEach(g=>g.lines.forEach(l=>{l.price=l.price.replace(/ ved (\d+) måneders binding$/,' i $1 måneder')}));
   return m};
  try{renderMail()}catch(e){}
 })();
