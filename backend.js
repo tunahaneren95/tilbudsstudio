@@ -40,7 +40,10 @@ let MEMO = {};
 
 function doPost(e) {
   let body = {};
-  try { body = JSON.parse(e.postData.contents || '{}'); } catch (err) { return svar({ ok: false, fejl: 'Ugyldig forespørgsel' }); }
+  const raa = e && e.postData && e.postData.contents || '{}';
+  if (raa.length > 60000) return svar({ ok: false, fejl: 'For stor forespørgsel' });
+  try { body = JSON.parse(raa); } catch (err) { return svar({ ok: false, fejl: 'Ugyldig forespørgsel' }); }
+  if (!body || typeof body !== 'object' || typeof body.a !== 'string' || !Object.prototype.hasOwnProperty.call(HANDLINGER, body.a)) return svar({ ok: false, fejl: 'Ukendt handling' });
   MEMO = {};
   const lock = SKRIV[body.a] ? LockService.getScriptLock() : null;
   try {
@@ -63,12 +66,15 @@ function svar(o) {
 /* ---------- Handlinger ---------- */
 const HANDLINGER = {
   opret: function (b) {
-    const navn = String(b.navn || '').trim().replace(/\s+/g, ' ');
+    const navn = ren(b.navn, 40).replace(/^'/, '');
     const pin = String(b.pin || '');
     if (navn.length < 2) throw new Error('Skriv dit navn');
+    if (!/^[\p{L}][\p{L}\p{M} .'-]{1,39}$/u.test(navn)) throw new Error('Navnet må kun indeholde bogstaver');
     if (!/^\d{4,8}$/.test(pin)) throw new Error('PIN skal være 4-8 cifre');
+    if (/^(\d)\1+$/.test(pin) || '0123456789'.includes(pin) || '9876543210'.includes(pin)) throw new Error('Vælg en PIN, der er sværere at gætte end ' + pin);
     const rows = data(ARK.saelgere);
     if (rows.some(r => String(r[1]).toLowerCase() === navn.toLowerCase())) throw new Error('Navnet findes allerede. Log ind i stedet.');
+    maksPrTime('opret_t', 15);
     const id = 'S' + Utilities.getUuid().slice(0, 8);
     const token = Utilities.getUuid();
     ark(ARK.saelgere).appendRow([id, navn, hash(pin, id), token, nu(), 'ja']); MEMO = {};
@@ -76,13 +82,16 @@ const HANDLINGER = {
   },
 
   login: function (b) {
-    const navn = String(b.navn || '').trim().toLowerCase();
+    const navn = String(b.navn || '').trim().replace(/\s+/g, ' ').toLowerCase().slice(0, 40);
+    const nk = 'lf_' + Utilities.base64EncodeWebSafe(navn).slice(0, 60);
+    laast(nk, 5, 15);
     const rows = data(ARK.saelgere);
     const i = rows.findIndex(r => String(r[1]).toLowerCase() === navn);
-    if (i < 0) throw new Error('Ingen profil med det navn');
+    if (i < 0) { fejlForsoeg(nk, 15); throw new Error('Forkert navn eller PIN'); }
     const r = rows[i];
     if (r[5] === 'nej') throw new Error('Profilen er deaktiveret');
-    if (hash(String(b.pin || ''), r[0]) !== r[2]) throw new Error('Forkert PIN');
+    if (hash(String(b.pin || ''), r[0]) !== r[2]) { fejlForsoeg(nk, 15); throw new Error('Forkert navn eller PIN'); }
+    nulstil(nk);
     const token = Utilities.getUuid();
     ark(ARK.saelgere).getRange(i + 2, 4).setValue(token); MEMO = {};
     return { ok: true, token: token, mig: profil(r[0]) };
@@ -95,21 +104,23 @@ const HANDLINGER = {
 
   ordre: function (b) {
     const s = saelger(b.token);
-    const nr = String(b.ordrenr || '').trim().slice(0, 40);
+    const nr = ren(b.ordrenr, 30);
     if (nr.length < 3) throw new Error('Skriv ordrenummeret');
+    if (!/^[A-Za-z0-9 ._\/-]{3,30}$/.test(nr)) throw new Error('Ordrenummeret må kun indeholde tal, bogstaver og bindestreg');
+    if (data(ARK.ordrer).filter(r => r[2] === s[0] && r[9] === 'Afventer').length >= 25) throw new Error('Du har 25 ordrer, der venter på godkendelse. Vent til nogle er godkendt.');
     const kv = Math.max(0, Math.round(Number(String(b.vaerdi || 0).replace(/\./g, '').replace(',', '.')) || 0));
     const el = Math.max(0, Math.min(50, Math.floor(Number(b.el) || 0)));
     if (data(ARK.ordrer).some(r => String(r[4]).toLowerCase() === nr.toLowerCase() && r[9] !== 'Afvist')) throw new Error('Ordre ' + nr + ' er allerede registreret');
     const p = beregn(kv, el);
     const id = 'O' + Utilities.getUuid().slice(0, 8);
-    ark(ARK.ordrer).appendRow([id, nu(), s[0], s[1], nr, String(b.kunde || '').slice(0, 80), kv, el, p, 'Afventer', '']); MEMO = {};
+    ark(ARK.ordrer).appendRow([id, nu(), s[0], s[1], nr, ren(b.kunde, 60), Math.min(kv, 10000000), el, p, 'Afventer', '']); MEMO = {};
     return { ok: true, point: p, mig: profil(s[0]), ordrer: mineOrdrer(s[0]) };
   },
 
   alt: function (b) {
-    const r = { ok: true, varer: HANDLINGER.shop().varer, regler: regler(), top: HANDLINGER.top(), priser: priser(), mig: null };
-    const s = b.token ? data(ARK.saelgere).find(x => x[3] === b.token && x[5] !== 'nej') : null;
-    if (s) { r.mig = profil(s[0]); r.koder = mineKoder(s[0]); r.ordrer = mineOrdrer(s[0]); }
+    const r = { ok: true, varer: HANDLINGER.shop().varer, regler: regler(), top: HANDLINGER.top(), mig: null };
+    const s = gyldigToken(b.token) ? data(ARK.saelgere).find(x => x[3] === b.token && x[5] !== 'nej') : null;
+    if (s) { r.mig = profil(s[0]); r.koder = mineKoder(s[0]); r.ordrer = mineOrdrer(s[0]); r.priser = priser(); }
     return r;
   },
 
@@ -124,7 +135,7 @@ const HANDLINGER = {
     const s = saelger(b.token);
     const katalog = {};
     data(ARK.shop).forEach(r => { if (r[0] && String(r[5]).toLowerCase() !== 'nej') katalog[String(r[0])] = r; });
-    const kurv = (b.kurv || []).filter(x => katalog[x.id] && x.antal > 0);
+    const kurv = (Array.isArray(b.kurv) ? b.kurv : []).slice(0, 30).filter(x => x && katalog[x.id] && Number(x.antal) > 0);
     if (!kurv.length) throw new Error('Kurven er tom');
     let pris = 0;
     const tekst = kurv.map(x => {
@@ -179,17 +190,20 @@ const HANDLINGER = {
     return adminData();
   },
 
-  priser: function () { return Object.assign({ ok: true }, priser()); },
+  priser: function (b) {
+    if (!erAdmin(b)) saelger(b.token);
+    return Object.assign({ ok: true }, priser());
+  },
 
   gempriser: function (b) {
     admin(b);
     const skriv = (navn, rows) => {
-      if (!rows || rows.length < 2) return;
+      if (!Array.isArray(rows) || rows.length < 2 || rows.length > 400 || !Array.isArray(rows[0]) || rows[0].length > 12) return;
       const sh = ark(navn);
       const w = rows[0].length;
-      const ren = rows.map(r => { const x = r.slice(0, w); while (x.length < w) x.push(''); return x.map(c => String(c == null ? '' : c)); });
+      const celler = rows.map(r => { const x = (Array.isArray(r) ? r : []).slice(0, w); while (x.length < w) x.push(''); return x.map(c => ren(c, 120)); });
       sh.clearContents();
-      sh.getRange(1, 1, ren.length, w).setNumberFormat('@').setValues(ren);
+      sh.getRange(1, 1, celler.length, w).setNumberFormat('@').setValues(celler);
       sh.getRange(1, 1, 1, w).setFontWeight('bold').setBackground('#ED0812').setFontColor('#ffffff');
       sh.setFrozenRows(1);
     };
@@ -201,7 +215,7 @@ const HANDLINGER = {
 
   admin: function (b) {
     admin(b);
-    return adminData();
+    return Object.assign(adminData(), { atok: adminSession(b) });
   },
 
   indloes: function (b) {
@@ -249,11 +263,34 @@ const HANDLINGER = {
     if (!p) throw new Error('Skriv et antal point');
     const r = data(ARK.saelgere).find(x => x[0] === b.id);
     if (!r) throw new Error('Sælger ikke fundet');
-    ark(ARK.log).appendRow([nu(), r[0], r[1], p, 'bonus', String(b.note || 'Bonus fra admin').slice(0, 200), '']);
+    ark(ARK.log).appendRow([nu(), r[0], r[1], p, 'bonus', ren(b.note || 'Bonus fra admin', 200), '']);
     MEMO = {};
     return Object.assign(adminData(), { mig: profil(r[0]) });
   }
 };
+
+/* ---------- Sikkerhed ---------- */
+const CACHE = () => CacheService.getScriptCache();
+/* tekst fra brugere må aldrig blive til formler i arket */
+function ren(v, max) {
+  let t = String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max || 80);
+  if (/^[=+\-@\t\r]/.test(t)) t = "'" + t;
+  return t;
+}
+function laast(noegle, max, min) {
+  const n = Number(CACHE().get(noegle) || 0);
+  if (n >= max) throw new Error('For mange forsøg. Prøv igen om ' + min + ' minutter.');
+}
+function fejlForsoeg(noegle, min) {
+  const c = CACHE(); const n = Number(c.get(noegle) || 0) + 1;
+  c.put(noegle, String(n), min * 60);
+}
+function nulstil(noegle) { CACHE().remove(noegle); }
+function maksPrTime(noegle, max) {
+  const c = CACHE(); const n = Number(c.get(noegle) || 0);
+  if (n >= max) throw new Error('Der er oprettet for mange profiler den seneste time. Prøv igen senere.');
+  c.put(noegle, String(n + 1), 3600);
+}
 
 /* ---------- Hjælpere ---------- */
 function ark(n) { return SpreadsheetApp.getActive().getSheetByName(n); }
@@ -278,12 +315,34 @@ function priser() {
 function hash(pin, salt) {
   return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + ':' + pin + ':luffy'));
 }
+function gyldigToken(t) { return typeof t === 'string' && /^[0-9a-f-]{36}$/.test(t); }
+function erAdmin(b) {
+  const k = String(b && b.admin || '');
+  if (!k) return false;
+  if (/^A-[0-9a-f-]{36}$/.test(k)) return !!CACHE().get('as_' + k);
+  return false;
+}
 function admin(b) {
-  if (!ADMIN_KODE || ADMIN_KODE === 'skift-mig-123') throw new Error('Skift ADMIN_KODE øverst i scriptet først');
-  if (String(b.admin || '') !== ADMIN_KODE) throw new Error('Forkert admin-kode');
+  if (!ADMIN_KODE || ADMIN_KODE === 'skift-mig-123' || ADMIN_KODE.length < 8) throw new Error('Admin-koden skal være mindst 8 tegn. Skift den i loaderen.');
+  const k = String(b.admin || '');
+  if (/^A-[0-9a-f-]{36}$/.test(k)) {
+    if (CACHE().get('as_' + k)) return;
+    throw new Error('Admin-sessionen er udløbet. Log ind igen.');
+  }
+  laast('adm_fejl', 5, 15);
+  if (k !== ADMIN_KODE) { fejlForsoeg('adm_fejl', 15); throw new Error('Forkert admin-kode'); }
+  nulstil('adm_fejl');
+}
+/* bytter admin-koden til en midlertidig nøgle, så koden ikke sendes hele tiden */
+function adminSession(b) {
+  const k = String(b.admin || '');
+  if (/^A-/.test(k)) return k;
+  const t = 'A-' + Utilities.getUuid();
+  CACHE().put('as_' + t, '1', 6 * 3600);
+  return t;
 }
 function saelger(token) {
-  const r = data(ARK.saelgere).find(x => token && x[3] === token);
+  const r = gyldigToken(token) ? data(ARK.saelgere).find(x => x[3] === token) : null;
   if (!r) throw new Error('LOGIN');
   if (r[5] === 'nej') throw new Error('Profilen er deaktiveret');
   return r;
