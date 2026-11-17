@@ -35,3 +35,27 @@ document.head.insertAdjacentHTML('beforeend',`<style>
   if(svg)svg.replaceWith(h);else o.appendChild(h);
  };
 })();
+
+/* Hammeren uden lag: ingen filtre på hele siden, færre gnister, kun GPU-venlige animationer */
+document.head.insertAdjacentHTML('beforeend',`<style>
+body.hm-shock{animation:none!important}
+body.hm-shock .stage{animation:hmShake2 .7s cubic-bezier(.36,.07,.19,.97)!important;will-change:transform}
+@keyframes hmShake2{0%{transform:translate3d(0,0,0)}8%{transform:translate3d(-22px,16px,0) rotate(-1deg)}16%{transform:translate3d(20px,-14px,0) rotate(.9deg)}24%{transform:translate3d(-16px,-10px,0) rotate(-.6deg)}32%{transform:translate3d(14px,10px,0)}45%{transform:translate3d(-8px,5px,0)}60%{transform:translate3d(5px,-3px,0)}80%{transform:translate3d(-2px,1px,0)}100%{transform:translate3d(0,0,0)}}
+.hm-ov .hm-bolts polyline{filter:none!important;stroke:#FFF3B0;stroke-width:3.5}
+.hm-ov .hm-rings i{box-shadow:none!important;border-width:5px;will-change:transform,opacity}
+.hm-ov .hm-word{will-change:transform,opacity;text-shadow:0 0 24px #FF3B44,4px 4px 0 #ED0812,-3px -3px 0 #FFD24A!important}
+.hm-ov .hm-img{filter:drop-shadow(0 24px 30px rgba(0,0,0,.6))!important}
+.hm-ov .hm-flash{will-change:opacity}
+.hm-zap{position:absolute;inset:0;background:#fff;mix-blend-mode:normal;opacity:0;will-change:opacity}
+.hm-ov.hit .hm-zap{animation:hmZap2 .5s steps(1)}
+@keyframes hmZap2{0%{opacity:.55;background:#fff}12%{opacity:0}24%{opacity:.35;background:#FF3B44}36%{opacity:0}100%{opacity:0}}
+</style>`);
+(function(){
+ const forrige=lxHammer;
+ lxHammer=function(){
+  const b=burst;burst=(x,y,n)=>b(x,y,Math.round(n*.35));
+  forrige();
+  setTimeout(()=>{burst=b},1600);
+  const o=document.querySelector('.hm-ov');if(o&&!o.querySelector('.hm-zap')){const z=document.createElement('div');z.className='hm-zap';o.prepend(z)}
+ };
+})();
