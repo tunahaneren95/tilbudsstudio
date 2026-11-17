@@ -62,3 +62,108 @@ body.hm-shock .stage{animation:hmShake2 .7s cubic-bezier(.36,.07,.19,.97)!import
 
 /* 📅 Kalender */
 document.head.appendChild(Object.assign(document.createElement('script'),{src:'kalender.js?v='+Math.floor(Date.now()/6e4)}));
+
+/* Ingen "Klar til Outlook"-banner når man kopierer */
+document.head.insertAdjacentHTML('beforeend','<style>#banner{display:none!important}</style>');
+
+/* Touchpoint Bruger (49 kr.) i omstillingssektionen */
+(function(){
+ const NY={id:'tp-bruger',cat:'tp',name:'Touchpoint Bruger',list:49,trin:[{binding:0,camp:0,max:0,ny:0,forl:0}]};
+ if(!DEFAULT_PLANS.some(p=>p.id==='tp-bruger')){const i=DEFAULT_PLANS.findIndex(p=>p.id==='tp-menu');DEFAULT_PLANS.splice(i<0?DEFAULT_PLANS.length:i+1,0,JSON.parse(JSON.stringify(NY)))}
+ const harDen=l=>l.some(p=>/touchpoint bruger/i.test(p.name));
+ function sikr(){if(harDen(plans))return false;let i=plans.findIndex(p=>/touchpoint menu/i.test(p.name));if(i<0)i=plans.map(p=>p.cat).lastIndexOf('tp');plans.splice(i<0?plans.length:i+1,0,JSON.parse(JSON.stringify(NY)));return true}
+ /* findes den ikke i Google-arket endnu, lægges den ind, indtil admin trykker "Gem for alle" */
+ function medBruger(P){
+  if(!P||!P.plan||P.plan.length<2)return P;
+  if(P.plan.some(r=>/touchpoint bruger/i.test(r.join(' '))))return P;
+  const h=P.plan[0].map(String),ix=re=>h.findIndex(c=>re.test(c)),row=h.map(()=>'');
+  const at=P.plan.findIndex(r=>/touchpoint menu/i.test(r.join(' ')));
+  const set=(re,v)=>{const i=ix(re);if(i>=0)row[i]=v};
+  set(/kategori/i,at>0?P.plan[at][ix(/kategori/i)]:'Omstilling');set(/abonnement/i,'Touchpoint Bruger');set(/liste/i,'49');set(/binding/i,'0');set(/udløb/i,'Nej');
+  const plan=P.plan.slice();plan.splice(at>0?at+1:plan.length,0,row);return Object.assign({},P,{plan});
+ }
+ const ap=lxApplyPrices;lxApplyPrices=function(P){return ap(medBruger(P))};
+ if(sikr())try{render()}catch(e){}
+})();
+
+/* 💰 Valutaen hedder Berries (One Piece) */
+(function(){
+ const R=[[/Luffy[ -]?points?/gi,'Berries'],[/\b1 point\b/g,'1 Berry'],[/\bpointene\b/gi,'Berries'],[/\bPoint\b/g,'Berries'],[/\bpoint\b/g,'Berries'],[/\bLP\b/g,'฿']];
+ const TEST=/Luffy[ -]?points?|\bpoint(ene)?\b|\bLP\b/i,SKIP=/^(SCRIPT|STYLE|TEXTAREA|INPUT|CODE)$/;
+ const fix=n=>{const v=n.nodeValue;if(!v||!TEST.test(v))return;const p=n.parentNode;if(!p||SKIP.test(p.nodeName))return;let x=v;R.forEach(([a,b])=>{x=x.replace(a,b)});if(x!==v)n.nodeValue=x};
+ const walk=root=>{if(root.nodeType===3)return fix(root);if(root.nodeType!==1||SKIP.test(root.nodeName))return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode()))fix(n)};
+ walk(document.body);
+ new MutationObserver(ms=>{for(const m of ms){if(m.type==='characterData')fix(m.target);else m.addedNodes.forEach(walk)}}).observe(document.body,{subtree:true,childList:true,characterData:true});
+ document.title=document.title.replace(/Luffy[ -]?points?/gi,'Berries');
+})();
+
+/* ⚽ SIUUU når en lukket ordre bliver sendt ind */
+document.head.insertAdjacentHTML('beforeend',`<style>
+.si-ov{position:fixed;inset:0;z-index:96;pointer-events:none;overflow:hidden;display:grid;place-items:center}
+.si-bg{position:absolute;inset:0;background:radial-gradient(60% 50% at 50% 70%,rgba(237,8,18,.45),rgba(8,2,3,.8) 70%);opacity:0;animation:siBg 3.8s ease forwards}
+@keyframes siBg{0%{opacity:0}10%{opacity:1}80%{opacity:1}100%{opacity:0}}
+.si-fig{position:absolute;left:50%;bottom:12vh;width:min(260px,42vw);margin-left:calc(min(260px,42vw)/-2);transform-origin:50% 100%;will-change:transform;animation:siJump 3.8s cubic-bezier(.3,.7,.3,1) forwards}
+.si-fig svg{display:block;width:100%;height:auto;overflow:visible}
+@keyframes siJump{0%{transform:translateY(120%) scaleX(1)}12%{transform:translateY(0) scale(1,1)}17%{transform:translateY(4%) scale(1.08,.88)}30%{transform:translateY(-42%) scaleX(1)}36%{transform:translateY(-50%) scaleX(-1)}42%{transform:translateY(-44%) scaleX(1)}50%{transform:translateY(0) scale(1.14,.82)}56%{transform:translateY(0) scale(.97,1.04)}62%{transform:translateY(0) scale(1)}88%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(10%) scale(1);opacity:0}}
+.si-arm{transform-box:fill-box;will-change:transform}
+.si-arm.l{transform-origin:100% 0%;animation:siArmL 3.8s ease forwards}
+.si-arm.r{transform-origin:0% 0%;animation:siArmR 3.8s ease forwards}
+@keyframes siArmL{0%,45%{transform:rotate(115deg)}50%,100%{transform:rotate(0)}}
+@keyframes siArmR{0%,45%{transform:rotate(-115deg)}50%,100%{transform:rotate(0)}}
+.si-word{position:absolute;top:14vh;left:0;right:0;text-align:center;font-family:var(--display);font-weight:900;font-size:clamp(70px,15vw,210px);letter-spacing:-.04em;line-height:1;color:#fff;text-shadow:0 0 40px rgba(237,8,18,.9),6px 6px 0 #ED0812,-4px -4px 0 #FFD24A}
+.si-word span{display:inline-block;opacity:0;transform:scale(.2) translateY(40px);animation:siLet .5s cubic-bezier(.2,1.6,.4,1) forwards}
+.si-word span.u{transform-origin:0 50%}
+.si-word.go span.u{animation:siLet .5s cubic-bezier(.2,1.6,.4,1) forwards,siU 1.4s ease-in-out .5s forwards}
+@keyframes siLet{to{opacity:1;transform:none}}
+@keyframes siU{0%{transform:none}50%{transform:scaleX(1.5)}100%{transform:scaleX(1.25)}}
+.si-word.ud{animation:siUd .5s ease forwards}
+@keyframes siUd{to{opacity:0;transform:translateY(-30px) scale(1.1)}}
+.si-ring{position:absolute;left:50%;bottom:12vh;width:40px;height:14px;margin:0 0 -7px -20px;border-radius:50%;border:4px solid #FFD24A;opacity:0;will-change:transform,opacity}
+.si-ov.hit .si-ring{animation:siRing .9s ease-out forwards}
+.si-ov.hit .si-ring.b{animation-delay:.12s;border-color:#FF3B44}
+@keyframes siRing{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(16)}}
+.si-flash{position:absolute;inset:0;background:#fff;opacity:0}
+.si-ov.hit .si-flash{animation:siFlash .35s ease-out}
+@keyframes siFlash{0%{opacity:.5}100%{opacity:0}}
+body.si-shock .stage{animation:hmShake2 .6s cubic-bezier(.36,.07,.19,.97)}
+@media (prefers-reduced-motion:reduce){.si-fig,.si-arm,.si-word span{animation:none!important;opacity:1;transform:none}}
+</style>`);
+function lxSiuuu(){
+ document.querySelectorAll('.si-ov').forEach(x=>x.remove());
+ const o=document.createElement('div');o.className='si-ov';o.setAttribute('aria-hidden','true');
+ /* stiliseret spiller set bagfra i den berømte landing: arme ud, ben spredt, nr. 7 på ryggen */
+ o.innerHTML=`<div class="si-bg"></div><div class="si-flash"></div><i class="si-ring"></i><i class="si-ring b"></i>
+ <div class="si-fig"><svg viewBox="0 0 200 300" aria-hidden="true">
+  <defs><linearGradient id="siJ" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF2A33"/><stop offset="1" stop-color="#B0050D"/></linearGradient></defs>
+  <ellipse cx="100" cy="296" rx="70" ry="6" fill="rgba(0,0,0,.45)"/>
+  <path d="M78 180 L52 236 L44 288" fill="none" stroke="#2A1416" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M122 180 L148 236 L156 288" fill="none" stroke="#2A1416" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M49 250 L45 286" stroke="#ED0812" stroke-width="21" stroke-linecap="round"/><path d="M151 250 L155 286" stroke="#ED0812" stroke-width="21" stroke-linecap="round"/>
+  <path d="M36 292 h20 M144 292 h20" stroke="#111" stroke-width="10" stroke-linecap="round"/>
+  <g class="si-arm l"><path d="M74 74 L44 118 L22 150" fill="none" stroke="url(#siJ)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><path d="M40 124 L22 150" stroke="#2A1416" stroke-width="15" stroke-linecap="round"/></g>
+  <g class="si-arm r"><path d="M126 74 L156 118 L178 150" fill="none" stroke="url(#siJ)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><path d="M160 124 L178 150" stroke="#2A1416" stroke-width="15" stroke-linecap="round"/></g>
+  <path d="M68 66 Q100 58 132 66 L140 150 Q100 158 60 150 Z" fill="url(#siJ)"/>
+  <path d="M60 148 Q100 156 140 148 L146 186 L106 188 L100 176 L94 188 L54 186 Z" fill="#F7F2F2"/>
+  <text x="100" y="128" text-anchor="middle" font-family="Unbounded,Arial Black,sans-serif" font-weight="900" font-size="56" fill="#fff">7</text>
+  <rect x="91" y="48" width="18" height="16" rx="5" fill="#2A1416"/>
+  <circle cx="100" cy="34" r="21" fill="#2A1416"/><path d="M80 30 Q84 10 100 12 Q118 10 121 30 Q110 20 100 22 Q88 20 80 30Z" fill="#120809"/>
+ </svg></div>
+`;
+ document.body.appendChild(o);
+ let w=null;
+ setTimeout(()=>{ /* landing */
+  o.classList.add('hit');
+  o.insertAdjacentHTML('beforeend','<div class="si-word go">'+['S','I','U','U','U','!'].map((c,i)=>`<span class="${c==='U'?'u':''}" style="animation-delay:${i*.07}s${c==='U'?','+(.5+i*.07)+'s':''}">${c}</span>`).join('')+'</div>');
+  w=o.querySelector('.si-word');
+  document.body.classList.remove('si-shock');void document.body.offsetWidth;document.body.classList.add('si-shock');
+  try{const f=o.querySelector('.si-fig').getBoundingClientRect();burst(f.left+f.width/2,f.bottom-10,70)}catch(e){}
+  try{sky.kick()}catch(e){}
+ },1900);
+ setTimeout(()=>{if(w)w.classList.add('ud')},3300);
+ setTimeout(()=>{o.remove();document.body.classList.remove('si-shock')},3900);
+}
+(function(){
+ const send=lxSendOrder;
+ lxSendOrder=async function(){const nr=LX.of&&LX.of.nr,el=LX.of&&+LX.of.el||0;await send.apply(this,arguments);if(LX.of&&LX.of.nr!==nr)setTimeout(lxSiuuu,el>0?2500:0)};
+ addEventListener('keydown',e=>{if(e.altKey&&(e.key==='s'||e.key==='S')){e.preventDefault();lxSiuuu()}});
+})();
