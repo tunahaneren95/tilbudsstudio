@@ -35,7 +35,7 @@ function doGet(e) {
   return svar({ ok: true, besked: 'Luffy points kører.' });
 }
 
-const SKRIV = { opret: 1, login: 1, ordre: 1, koeb: 1, indloes: 1, godkend: 1, bonus: 1, billede: 1, gempriser: 1 };
+const SKRIV = { opret: 1, login: 1, ordre: 1, koeb: 1, indloes: 1, godkend: 1, bonus: 1, billede: 1, gempriser: 1, slet: 1 };
 let MEMO = {};
 
 function doPost(e) {
@@ -229,6 +229,16 @@ const HANDLINGER = {
     r[9] = status;
     MEMO = {};
     return Object.assign(adminData(), { ordre: ro(r) });
+  },
+
+  slet: function (b) {
+    admin(b);
+    const rows = data(ARK.saelgere);
+    const i = rows.findIndex(r => r[0] === b.id);
+    if (i < 0) throw new Error('Sælger ikke fundet');
+    ark(ARK.saelgere).deleteRow(i + 2);
+    MEMO = {};
+    return Object.assign(adminData(), { slettet: String(rows[i][1]) });
   },
 
   bonus: function (b) {
