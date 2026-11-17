@@ -85,3 +85,75 @@ function lxBoard(){
  el.querySelectorAll('.lx-chest b[data-n]').forEach(b=>{const to=+b.dataset.n,i=b.querySelector('i').outerHTML;if(RM||!to){b.innerHTML=lnum(to)+i;return}const t0=performance.now();const f=t=>{const k=Math.min(1,(t-t0)/1100),e=1-Math.pow(1-k,3);b.innerHTML=lnum(to*e)+i;if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)});
 }
 if(view()==='top')lxBoard();
+
+/* ⚡ Elsalg: kæmpehammeren slår ned og giver stød til hele siden */
+document.head.insertAdjacentHTML('beforeend',`<style>
+.hm-ov{position:fixed;inset:0;z-index:95;pointer-events:none;overflow:hidden}
+.hm-flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 72%,#fff 0%,rgba(255,240,180,.9) 18%,rgba(255,59,68,.35) 45%,transparent 70%);opacity:0}
+.hm-ov.hit .hm-flash{animation:hmFlash .9s ease-out}
+@keyframes hmFlash{0%{opacity:1}15%{opacity:.2}25%{opacity:.85}100%{opacity:0}}
+.hm-tool{position:absolute;left:50%;top:72%;width:min(520px,80vw);margin-left:calc(min(520px,80vw)*-.18);transform-origin:18% 92%;transform:translate(-10%,-92%) rotate(-75deg);opacity:0;filter:drop-shadow(0 30px 40px rgba(0,0,0,.6))}
+.hm-ov.go .hm-tool{animation:hmSwing 2.1s cubic-bezier(.5,0,.2,1) forwards}
+@keyframes hmSwing{0%{opacity:0;transform:translate(10%,-140%) rotate(-95deg)}14%{opacity:1;transform:translate(0,-100%) rotate(-80deg)}26%{transform:translate(-4%,-96%) rotate(-92deg)}38%{transform:translate(-10%,-92%) rotate(8deg)}42%{transform:translate(-10%,-91%) rotate(2deg)}48%{transform:translate(-10%,-92%) rotate(5deg)}78%{opacity:1;transform:translate(-10%,-92%) rotate(4deg)}100%{opacity:0;transform:translate(20%,-160%) rotate(-40deg)}}
+.hm-rings{position:absolute;left:50%;top:76%;width:0;height:0}
+.hm-rings i{position:absolute;left:0;top:0;width:40px;height:40px;margin:-20px;border-radius:50%;border:4px solid rgba(255,230,120,.95);box-shadow:0 0 30px rgba(255,200,60,.9),inset 0 0 20px rgba(255,59,68,.6);opacity:0}
+.hm-ov.hit .hm-rings i{animation:hmRing 1.1s cubic-bezier(.1,.7,.3,1) forwards}
+.hm-ov.hit .hm-rings i:nth-child(2){animation-delay:.12s;border-color:rgba(255,59,68,.9)}
+.hm-ov.hit .hm-rings i:nth-child(3){animation-delay:.24s;border-color:rgba(255,255,255,.8)}
+@keyframes hmRing{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(40)}}
+.hm-bolts{position:absolute;inset:0;width:100%;height:100%}
+.hm-bolts polyline{fill:none;stroke:#FFF6C8;stroke-width:4;stroke-linejoin:round;filter:drop-shadow(0 0 8px #FFD24A) drop-shadow(0 0 22px #FF3B44);opacity:0}
+.hm-ov.hit .hm-bolts polyline{animation:hmBolt .5s steps(2) 3}
+.hm-ov.hit .hm-bolts polyline:nth-child(2n){animation-delay:.08s}.hm-ov.hit .hm-bolts polyline:nth-child(3n){animation-delay:.16s}
+@keyframes hmBolt{0%{opacity:1}50%{opacity:0}100%{opacity:1}}
+.hm-crack{position:absolute;left:50%;top:76%;width:min(700px,95vw);transform:translate(-50%,-50%);opacity:0}
+.hm-ov.hit .hm-crack{animation:hmCrack 1.6s ease-out forwards}
+@keyframes hmCrack{0%{opacity:1;transform:translate(-50%,-50%) scale(.6)}10%{transform:translate(-50%,-50%) scale(1)}70%{opacity:.9}100%{opacity:0}}
+.hm-word{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%) scale(.2) rotate(-8deg);font-family:var(--display);font-weight:800;font-size:clamp(54px,12vw,170px);letter-spacing:-.04em;line-height:.9;text-align:center;color:#fff;opacity:0;
+ text-shadow:0 0 30px #FFD24A,0 0 60px #FF3B44,4px 4px 0 #ED0812,-4px -4px 0 #FFD24A;white-space:nowrap}
+.hm-word small{display:block;font-size:.22em;letter-spacing:.3em;margin-top:.4em;color:#FFE79A;text-shadow:0 0 16px #FF3B44}
+.hm-ov.hit .hm-word{animation:hmWord 1.8s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes hmWord{0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(-8deg)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.15) rotate(-4deg)}20%{transform:translate(-48%,-52%) scale(1) rotate(-6deg)}24%{transform:translate(-52%,-48%) scale(1.02) rotate(-3deg)}80%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-5deg)}100%{opacity:0;transform:translate(-50%,-60%) scale(1.3) rotate(-5deg)}}
+body.hm-shock .stage{animation:hmShake .9s cubic-bezier(.36,.07,.19,.97)}
+body.hm-shock{animation:hmZap .9s steps(1)}
+@keyframes hmShake{0%{transform:translate(0,0)}5%{transform:translate(-28px,22px) rotate(-1.4deg)}10%{transform:translate(26px,-18px) rotate(1.2deg)}15%{transform:translate(-22px,-14px) rotate(-.9deg)}20%{transform:translate(20px,16px) rotate(.8deg)}30%{transform:translate(-14px,10px) rotate(-.5deg)}40%{transform:translate(12px,-8px) rotate(.4deg)}55%{transform:translate(-7px,5px)}70%{transform:translate(5px,-3px)}85%{transform:translate(-2px,2px)}100%{transform:none}}
+@keyframes hmZap{0%{filter:none}6%{filter:invert(1) hue-rotate(180deg)}10%{filter:none}16%{filter:saturate(3) brightness(1.6) hue-rotate(-20deg)}22%{filter:none}30%{filter:contrast(1.8) brightness(1.3)}36%{filter:none}}
+</style>`);
+function lxHammer(){
+ if(typeof RM!=='undefined'&&RM){toast('⚡ ELSALG!');return}
+ document.querySelectorAll('.hm-ov').forEach(x=>x.remove());
+ const W=innerWidth,H=innerHeight,cx=W/2,cy=H*.76;
+ const bolt=(x1,y1,x2,y2,seg)=>{let p=[[x1,y1]];for(let i=1;i<seg;i++){const t=i/seg;p.push([x1+(x2-x1)*t+(Math.random()-.5)*90,y1+(y2-y1)*t+(Math.random()-.5)*90])}p.push([x2,y2]);return `<polyline points="${p.map(q=>q.map(Math.round).join(',')).join(' ')}"/>`};
+ let bolts='';[[0,0],[W,0],[0,H*.4],[W,H*.35],[W*.25,H],[W*.8,H],[0,H],[W,H],[W*.5,0]].forEach(([x,y])=>bolts+=bolt(cx,cy,x,y,9));
+ const o=document.createElement('div');o.className='hm-ov';o.setAttribute('aria-hidden','true');
+ o.innerHTML=`<div class="hm-flash"></div><svg class="hm-bolts" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${bolts}</svg>
+ <svg class="hm-crack" viewBox="0 0 700 220"><g fill="none" stroke="rgba(255,240,200,.9)" stroke-width="3" stroke-linecap="round"><path d="M350 110 L300 90 L250 100 L190 70 L120 80 L40 50"/><path d="M350 110 L410 85 L470 98 L540 66 L620 74 L690 40"/><path d="M350 110 L330 150 L280 170 L230 210"/><path d="M350 110 L380 160 L440 175 L480 215"/><path d="M300 90 L290 50 L300 10"/><path d="M470 98 L490 140 L560 150"/></g></svg>
+ <div class="hm-rings"><i></i><i></i><i></i></div>
+ <svg class="hm-tool" viewBox="0 0 520 300"><defs>
+  <linearGradient id="hmWood" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#C98B4E"/><stop offset=".5" stop-color="#8A5428"/><stop offset="1" stop-color="#5A3216"/></linearGradient>
+  <linearGradient id="hmHead" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#4A4F58"/><stop offset=".45" stop-color="#2A2D33"/><stop offset="1" stop-color="#121418"/></linearGradient>
+  <linearGradient id="hmBand" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#FF5A60"/><stop offset="1" stop-color="#8E040A"/></linearGradient></defs>
+  <rect x="60" y="128" width="300" height="34" rx="14" fill="url(#hmWood)" transform="rotate(-2 210 145)"/>
+  <rect x="70" y="134" width="40" height="22" rx="8" fill="#3B2210" opacity=".55"/><rect x="118" y="134" width="40" height="22" rx="8" fill="#3B2210" opacity=".35"/>
+  <rect x="330" y="30" width="170" height="230" rx="34" fill="url(#hmHead)" stroke="#0A0B0D" stroke-width="6"/>
+  <rect x="330" y="62" width="170" height="26" fill="url(#hmBand)"/><rect x="330" y="202" width="170" height="26" fill="url(#hmBand)"/>
+  <rect x="344" y="40" width="20" height="210" rx="10" fill="#fff" opacity=".12"/>
+  <path d="M428 100 L398 150 L422 150 L404 196 L452 136 L428 136 L446 100 Z" fill="#FFD24A" stroke="#fff" stroke-width="4" stroke-linejoin="round"/></svg>
+ <div class="hm-word">ELSALG!<small>⚡ STRØM PÅ KONTOEN ⚡</small></div>`;
+ document.body.appendChild(o);
+ requestAnimationFrame(()=>o.classList.add('go'));
+ try{sfx.whoosh()}catch(e){}
+ setTimeout(()=>{o.classList.add('hit');document.body.classList.remove('hm-shock');void document.body.offsetWidth;document.body.classList.add('hm-shock');
+  try{sky.kick();sky.kick()}catch(e){}
+  for(let i=0;i<6;i++)setTimeout(()=>burst(cx+(Math.random()-.5)*240,cy+(Math.random()-.5)*60,80),i*70);
+  if(navigator.vibrate)try{navigator.vibrate([60,40,120])}catch(e){}
+ },800);
+ setTimeout(()=>{document.body.classList.remove('hm-shock');o.remove()},3200);
+}
+/* hammeren slår, når en ordre med elsalg sendes, og når admin godkender en */
+(function(){
+ const send=lxSendOrder;
+ lxSendOrder=async function(){const el=LX.of.el,nr=LX.of.nr;await send();if(el>0&&LX.of.nr!==nr)lxHammer()};
+ $('lx-admin').addEventListener('click',e=>{const g=e.target.closest('[data-god]');if(!g||!LX.adm)return;const o=(LX.adm.ordrer||[]).find(x=>x.id===g.dataset.god);if(o&&o.el>0)setTimeout(lxHammer,250)},true);
+ addEventListener('keydown',e=>{if(e.altKey&&(e.key==='e'||e.key==='E')){e.preventDefault();lxHammer()}});
+})();
