@@ -284,22 +284,136 @@ function importer(f){
  r.readAsText(f);
 }
 
-/* ---------- pop-up når man lander på siden ---------- */
-function dagensPop(){
+/* ---------- lille reminder når man lander på siden (med kryds) ---------- */
+document.head.insertAdjacentHTML('beforeend',`<style>
+.kl-dock{position:fixed;right:20px;bottom:20px;z-index:8999;width:min(380px,calc(100vw - 32px));max-height:calc(100vh - 40px);overflow:auto;padding:20px 20px 18px;border-radius:24px;background:radial-gradient(120% 90% at 100% 0%,rgba(237,8,18,.3),transparent 60%),linear-gradient(170deg,#24090C,#0F0607);border:1px solid rgba(255,59,68,.45);box-shadow:0 34px 80px -24px rgba(237,8,18,.6),0 0 0 1px rgba(255,255,255,.03) inset;animation:klDock .55s cubic-bezier(.2,1.3,.4,1)}
+.kl-dock.out{animation:klDockUd .3s ease forwards}
+@keyframes klDock{from{transform:translateY(40px) scale(.95);opacity:0}}
+@keyframes klDockUd{to{transform:translateY(30px);opacity:0}}
+.kl-dock .kl-luk{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;border:1px solid var(--edge-2);background:rgba(255,255,255,.08);color:#fff;font-size:15px;line-height:1;cursor:pointer;display:grid;place-items:center;transition:background .15s,transform .15s}
+.kl-dock .kl-luk:hover{background:var(--red);border-color:var(--red);transform:rotate(90deg)}
+.kl-dock small.kl-ey{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--red-hi);font-weight:800;padding-right:40px}
+.kl-dock h3{margin:8px 40px 4px 0;font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.03em;line-height:1.15}
+.kl-dock h3 em{font-style:normal;color:var(--red-hi)}
+.kl-dock>p{margin:0 0 12px;color:var(--muted);font-size:13.5px}
+.kl-rl{display:grid;gap:6px;margin:12px 0 14px}
+.kl-rl div{display:grid;grid-template-columns:54px minmax(0,1fr);gap:10px;align-items:center;padding:9px 12px;border-radius:14px;background:rgba(0,0,0,.28);border:1px solid var(--edge);border-left:3px solid var(--c)}
+.kl-rl div.nx{border-color:rgba(255,59,68,.55);border-left-color:var(--c);background:linear-gradient(90deg,rgba(237,8,18,.16),rgba(0,0,0,.28))}
+.kl-rl div.dn{opacity:.45;text-decoration:line-through}
+.kl-rl b{font-family:var(--display);font-size:13px}
+.kl-rl span{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kl-rl span i{font-style:normal;color:var(--muted);font-weight:500}
+.kl-da{display:flex;gap:8px;flex-wrap:wrap}
+.kl-da button{flex:1;min-width:110px;padding:11px 14px;border-radius:14px;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;border:1px solid var(--edge-2);background:rgba(255,255,255,.05);color:var(--ink)}
+.kl-da button.go{background:linear-gradient(180deg,#FF2A33,var(--red));border-color:transparent;color:#fff;box-shadow:0 12px 26px -12px var(--red-glow)}
+.kl-chips{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 12px}
+.kl-chips button{padding:9px 13px;border-radius:999px;border:1px solid var(--edge-2);background:rgba(255,255,255,.05);color:var(--ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}
+.kl-chips button:hover{border-color:var(--red);background:rgba(237,8,18,.2);transform:translateY(-1px)}
+.kl-chips button small{display:block;font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.kl-dock input[type=date],.kl-dock input[type=time],.kl-dock textarea{width:100%;min-width:0;background:rgba(0,0,0,.3);border:1px solid var(--edge);border-radius:12px;padding:11px 12px;font:inherit;font-size:14px;color:var(--ink);color-scheme:dark}
+.kl-dock textarea{min-height:76px;resize:vertical;margin-bottom:12px}
+.kl-dock input:focus,.kl-dock textarea:focus{border-color:var(--red);outline:none;box-shadow:0 0 0 3px rgba(237,8,18,.2)}
+.kl-own{display:flex;gap:8px;margin-bottom:12px}
+.kl-own button{padding:0 14px;border-radius:12px;border:0;background:var(--red);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.kl-steps{display:flex;gap:4px;margin:12px 0 2px}
+.kl-steps i{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.12)}
+.kl-steps i.on{background:linear-gradient(90deg,#FF3B44,#FFB347)}
+.kl-sum{padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid var(--edge);font-size:13px;color:var(--muted);margin-bottom:12px}
+.kl-sum b{color:var(--ink)}
+@media (max-width:520px){.kl-dock{right:12px;left:12px;bottom:12px;width:auto}}
+@media (prefers-reduced-motion:reduce){.kl-dock{animation:none}}
+</style>`);
+function dock(html,cls){
+ document.querySelectorAll('.kl-dock,.kl-ping').forEach(x=>x.remove());
+ const d=document.createElement('div');d.className='kl-dock '+(cls||'');d.setAttribute('role','dialog');d.setAttribute('aria-label','Kalender');
+ d.innerHTML=html+'<button class="kl-luk" type="button" aria-label="Luk" title="Luk">✕</button>';
+ document.body.appendChild(d);
+ d.luk=()=>{if(!d.isConnected)return;d.classList.add('out');setTimeout(()=>d.remove(),300);document.removeEventListener('keydown',d._esc)};
+ d.querySelector('.kl-luk').onclick=d.luk;
+ d._esc=ev=>{if(ev.key==='Escape')d.luk()};document.addEventListener('keydown',d._esc);
+ return d;
+}
+function dagensPop(tving){
  const nk='ts.kal.pop.'+bruger();let set='';try{set=sessionStorage.getItem(nk)}catch(x){}
- if(set===idag())return;try{sessionStorage.setItem(nk,idag())}catch(x){}
- const l=paaDag(hent(),idag()),aaben=l.filter(a=>!a.done);
- if(!l.length)return;
+ if(!tving&&set===idag())return;try{sessionStorage.setItem(nk,idag())}catch(x){}
+ const alle=hent(),l=paaDag(alle,idag()),aaben=l.filter(a=>!a.done),nx=naeste(alle);
  const t=new Date().getHours(),hils=t<10?'Godmorgen':t<17?'Hej':'Godaften';
  const navn=(()=>{try{return LX.me?' '+LX.me.navn.split(' ')[0]:''}catch(x){return''}})();
- const ov=overlay(`<small style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--red-hi);font-weight:800">${e(DAGE_L[new Date().getDay()])} ${new Date().getDate()}. ${MDR[new Date().getMonth()]}</small>
-  <div style="display:flex;align-items:flex-end;gap:16px;margin:10px 0 4px"><div class="kl-big">${aaben.length}</div><h2>${e(hils+navn)},<br><em>${aaben.length===1?'én aftale':aaben.length?'aftaler':'alt klaret'}</em> ${aaben.length?'i dag':'for i dag'}</h2></div>
-  <div class="kl-list">${l.slice(0,6).map(a=>itemHtml(a,true)).join('')}${l.length>6?`<p style="color:var(--muted);font-size:13px;margin:0">+ ${l.length-6} mere</p>`:''}</div>
-  <div class="kl-btns"><button class="primary" type="button" id="kp-go">Åbn kalenderen</button><button class="kl-del" type="button" id="kp-ok" style="color:var(--ink);border-color:var(--edge-2)">Forstået</button></div>`,'kl-pop');
- ov.querySelector('#kp-go').onclick=()=>{luk(ov);K.sel=idag();location.hash='kal'};
- ov.querySelector('#kp-ok').onclick=()=>luk(ov);
- try{const r=ov.querySelector('.kl-big').getBoundingClientRect();setTimeout(()=>burst(r.left+r.width/2,r.top+r.height/2,50),350)}catch(x){}
+ const dato=`${DAGE_L[new Date().getDay()]} ${new Date().getDate()}. ${MDR[new Date().getMonth()]}`;
+ let krop;
+ if(l.length){
+  krop=`<h3>${e(hils+navn)}, du har <em>${aaben.length?aaben.length+(aaben.length===1?' aftale':' aftaler'):'klaret alt'}</em> ${aaben.length?'i dag':'for i dag'}</h3>
+  <div class="kl-rl">${l.slice(0,5).map(a=>`<div class="${a.done?'dn':''}${nx&&nx.id===a.id?' nx':''}" style="--c:${typ(a).c}"><b>${a.t?e(a.t):'Hele dagen'}</b><span>${e(a.titel)}${a.kunde?` <i>· ${e(a.kunde)}</i>`:''}</span></div>`).join('')}</div>
+  ${l.length>5?`<p>+ ${l.length-5} mere i kalenderen</p>`:''}`;
+ }else{
+  krop=`<h3>${e(hils+navn)}, <em>ingen aftaler</em> i dag</h3><p>${nx?`Næste: <b style="color:var(--ink)">${e(nx.titel)}</b> ${e(datoTekst(nx.d))}${nx.t?' kl. '+e(nx.t):''}.`:'Kalenderen er tom. Læg din første aftale ind, så husker siden den for dig.'}</p>`;
+ }
+ const d=dock(`<small class="kl-ey">📅 ${e(dato)}</small>${krop}<div class="kl-da"><button class="go" type="button" data-a="aab">Åbn kalender</button><button type="button" data-a="ny">+ Ny aftale</button></div>`,'kl-rem');
+ d.querySelector('[data-a=aab]').onclick=()=>{d.luk();K.sel=idag();location.hash='kal'};
+ d.querySelector('[data-a=ny]').onclick=()=>{d.luk();K.sel=idag();formular(null)};
 }
+
+/* ---------- efter "Kopiér mail": skal opfølgningen i kalenderen? ---------- */
+const arbDag=n=>{const x=new Date();let i=0;while(i<n){x.setDate(x.getDate()+1);if(x.getDay()%6)i++}return x};
+const kortDag=x=>DAGE_L[x.getDay()].slice(0,3)+' '+x.getDate()+'/'+(x.getMonth()+1);
+let sidsteSpg='';
+function tilbudInfo(){
+ let firma='',kontakt='',emne='';
+ try{firma=(S.company||'').trim();kontakt=(S.contact||'').trim()}catch(x){}
+ try{emne=subject()}catch(x){}
+ return{firma,kontakt,emne};
+}
+function spoerg(){
+ const T=tilbudInfo(),noegle=T.firma+'|'+T.emne;
+ if(noegle===sidsteSpg)return;sidsteSpg=noegle;
+ const svar={titel:'Opfølgning på tilbud',kunde:T.firma,d:'',t:'',note:[T.kontakt?'Kontakt: '+T.kontakt:'',T.emne].filter(Boolean).join('\n'),type:'opfolg'};
+ const trin=(n)=>`<div class="kl-steps">${[1,2,3].map(i=>`<i class="${i<=n?'on':''}"></i>`).join('')}</div>`;
+ const d=dock(`<small class="kl-ey">🎯 Tilbud kopieret</small>
+  <h3>Skal jeg sætte en <em>opfølgning</em> i kalenderen${T.firma?' for '+e(T.firma):''}?</h3>
+  <p>Så glemmer du ikke at ringe tilbage.</p>
+  <div class="kl-da"><button class="go" type="button" data-a="ja">Ja, sæt den ind</button><button type="button" data-a="nej">Nej tak</button></div>`,'kl-ask');
+ d.querySelector('[data-a=nej]').onclick=d.luk;
+ d.querySelector('[data-a=ja]').onclick=()=>hvornaar();
+ const krop=html=>{d.querySelectorAll(':scope>*:not(.kl-luk)').forEach(x=>x.remove());d.insertAdjacentHTML('afterbegin',html)};
+ function hvornaar(){
+  const valg=[['I morgen',1],['Om 2 dage',2],['Om 3 dage',3],['Om en uge',5]];
+  krop(`<small class="kl-ey">Opfølgning${T.firma?' · '+e(T.firma):''}</small>${trin(1)}
+   <h3>Hvornår vil du <em>følge op</em>?</h3>
+   <div class="kl-chips">${valg.map(([n,v])=>{const x=arbDag(v);return`<button type="button" data-d="${iso(x)}">${n}<small>${kortDag(x)}</small></button>`}).join('')}</div>
+   <div class="kl-own"><input type="date" id="kq-d" min="${idag()}"><button type="button" id="kq-dok">Vælg</button></div>`);
+  d.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{svar.d=b.dataset.d;klok()});
+  d.querySelector('#kq-dok').onclick=()=>{const v=d.querySelector('#kq-d').value;if(v){svar.d=v;klok()}else d.querySelector('#kq-d').focus()};
+ }
+ function klok(){
+  krop(`<small class="kl-ey">${e(datoTekst(svar.d))}</small>${trin(2)}
+   <h3>Hvad <em>tid</em>?</h3>
+   <div class="kl-chips">${['09:00','10:00','11:00','13:00','14:00','15:00'].map(x=>`<button type="button" data-t="${x}">${x}</button>`).join('')}<button type="button" data-t="">Ingen fast tid</button></div>
+   <div class="kl-own"><input type="time" id="kq-t"><button type="button" id="kq-tok">Vælg</button></div>`);
+  d.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{svar.t=b.dataset.t;noter()});
+  d.querySelector('#kq-tok').onclick=()=>{const v=d.querySelector('#kq-t').value;if(v){svar.t=v;noter()}else d.querySelector('#kq-t').focus()};
+ }
+ function noter(){
+  krop(`<small class="kl-ey">Næsten færdig</small>${trin(3)}
+   <h3>Noget du vil <em>huske</em>?</h3>
+   <div class="kl-sum"><b>${e(svar.titel)}</b>${svar.kunde?' · '+e(svar.kunde):''}<br>${e(datoTekst(svar.d))}${svar.t?' kl. '+e(svar.t):', ingen fast tid'}</div>
+   <textarea id="kq-n" maxlength="2000" placeholder="Fx beslutningstager, hvad de skal tænke over…">${e(svar.note)}</textarea>
+   <div class="kl-da"><button class="go" type="button" data-a="gem">Læg i kalenderen</button></div>`);
+  const ta=d.querySelector('#kq-n');setTimeout(()=>{ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)},50);
+  d.querySelector('[data-a=gem]').onclick=()=>{
+   svar.note=ta.value.trim();
+   const l=hent();l.push({id:nyId(),d:svar.d,t:svar.t,s:'',titel:svar.titel,kunde:svar.kunde,type:svar.type,note:svar.note,done:false});gem(l);
+   const r=d.querySelector('[data-a=gem]').getBoundingClientRect();try{burst(r.left+r.width/2,r.top+r.height/2,60)}catch(x){}
+   krop(`<small class="kl-ey">✓ Lagt i kalenderen</small><h3>Opfølgning <em>${e(datoTekst(svar.d))}</em>${svar.t?' kl. '+e(svar.t):''}</h3><p>Du får en påmindelse, når dagen kommer.</p>
+    <div class="kl-da"><button class="go" type="button" data-a="aab">Se kalenderen</button><button type="button" data-a="ok">Super</button></div>`);
+   d.querySelector('[data-a=aab]').onclick=()=>{d.luk();K.sel=svar.d;const x=fraIso(svar.d);K.mdr=new Date(x.getFullYear(),x.getMonth(),1);location.hash='kal'};
+   d.querySelector('[data-a=ok]').onclick=d.luk;
+   if((location.hash||'')==='#kal')tegn();
+   clearTimeout(d._auto);d._auto=setTimeout(d.luk,8000);
+  };
+ }
+}
+/* knappen tegnes om løbende, så vi lytter på hele siden */
+document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('#copy');if(b&&!b.disabled)setTimeout(spoerg,1400)});
 /* vent til raket-intro og login er færdige */
 function naarKlar(fn){const it=document.getElementById('intro');
  if((it&&!it.hidden)||(typeof introOn!=='undefined'&&introOn)||document.querySelector('.gate')){setTimeout(()=>naarKlar(fn),400);return}
@@ -314,11 +428,10 @@ function pingTjek(tavs){
   else if(m>10)vist.delete(k)});
 }
 function ping(a,m){
- document.querySelectorAll('.kl-ping').forEach(x=>x.remove());
- const p=document.createElement('div');p.className='kl-ping';p.setAttribute('role','alert');
- p.innerHTML=`<small>${m?'Om '+m+' min':'Nu'}</small><h4>${e(a.titel)}</h4><p>${e(a.kunde||typ(a).n)} · kl. ${e(a.t)}</p><button type="button" aria-label="Luk">✕</button>`;
- document.body.appendChild(p);p.querySelector('button').onclick=()=>p.remove();p.onclick=ev=>{if(ev.target.tagName!=='BUTTON'){p.remove();K.sel=a.d;location.hash='kal'}};
- setTimeout(()=>p.remove(),60000);
+ const d=dock(`<small class="kl-ey">⏰ ${m?'Om '+m+' min':'Nu'}</small><h3>${e(a.titel)}</h3><p>${e(a.kunde||typ(a).n)} · kl. ${e(a.t)}</p><div class="kl-da"><button class="go" type="button" data-a="aab">Åbn kalender</button></div>`,'kl-pg');
+ d.setAttribute('role','alert');
+ d.querySelector('[data-a=aab]').onclick=()=>{d.luk();K.sel=a.d;location.hash='kal'};
+ setTimeout(d.luk,60000);
 }
 
 /* ---------- routing ---------- */
