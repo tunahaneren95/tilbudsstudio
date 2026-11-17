@@ -152,6 +152,8 @@ const HANDLINGER = {
         if (r[4] === 'ordre') x.ordrer++;
       }
     });
+    data(ARK.koder).forEach(r => { const x = m[r[2]]; if (x && r[6] !== 'Afvist') x.brugt = (x.brugt || 0) + (Number(r[5]) || 0); });
+    Object.keys(m).forEach(k => { m[k].brugt = m[k].brugt || 0; m[k].saldo = m[k].alt - m[k].brugt; });
     return { ok: true, maaned: md, liste: Object.keys(m).map(k => Object.assign({ id: k }, m[k])) };
   },
 
