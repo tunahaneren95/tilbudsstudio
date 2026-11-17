@@ -3,6 +3,8 @@
 const LUFFY_API='https://script.google.com/macros/s/AKfycbwhNBhOaeH743vg6EL2gqHDiCWJxbiZ1jW0-n7u5sqFFH4D6yzsG5VQt8-rThrR38R77Q/exec';
 const LX={api:LUFFY_API||store.get('ts.lapi',''),tok:store.get('ts.ltok',''),me:store.get('ts.lme',null),items:[],rules:null,codes:[],cart:store.get('ts.lcart',{}),board:null,mode:'md',admin:'',adm:null,offer:Math.random().toString(36).slice(2,10)};
 try{LX.admin=sessionStorage.getItem('ts.ladm')||''}catch(e){}
+/* ekstra stil, der kan opdateres uden ny index.html */
+document.head.insertAdjacentHTML('beforeend','<style>.lx-acts{display:flex;gap:14px;flex-wrap:wrap}.lx-del{color:var(--dim)}.lx-del:hover{color:var(--red-hi)}.lx-del.arm{color:#fff;background:var(--red);border-radius:8px;padding:4px 8px;text-decoration:none}</style>');
 var LX_F;const lnum=n=>Math.round(+n||0).toLocaleString('da-DK');
 LX_F=store.get('ts.lfoto',{});
 function lxFoto(id){const f=LX_F[id];return f&&f.d||''}
@@ -214,7 +216,7 @@ function lxAdminPaint(){const A=LX.adm,el=$('lx-admin');if(!A)return;
    <label class="f">Point<input id="lx-bp" inputmode="numeric" placeholder="100"></label>
    <label class="f">Begrundelse<input id="lx-bn" placeholder="Lukket aftale på 12 Corporate 50 GB"></label></div>
    <button class="primary" type="button" id="lx-bgo"${S2.length?'':' disabled'}>Giv point</button></div>
-  <div class="lx-card"><h3>Sælgere</h3><p class="hint" style="margin:0">Klik på et ansigt for at sætte et profilbillede ind. Det bliver beskåret firkantet og gjort lille automatisk.</p>${S2.length?`<div class="lx-people">${S2.map(s=>`<div class="lx-person"><button type="button" class="lx-avbtn" data-pic="${esc(s.id)}" title="Skift billede af ${esc(s.navn)}">${lxAv(s,'xl')}<span class="lx-cam">${lxFoto(s.id)?'Skift':'+ Billede'}</span></button><div class="lx-pn"><b>${esc(s.navn)}</b><small>Saldo ${lnum(s.saldo)} · optjent ${lnum(s.optjent)} · brugt ${lnum(s.brugt)}</small>${lxFoto(s.id)?`<button type="button" class="lx-link" data-rmpic="${esc(s.id)}">Fjern billede</button>`:''}</div></div>`).join('')}</div>`:'<p class="hint" style="margin:0">Ingen har oprettet en profil endnu.</p>'}</div>
+  <div class="lx-card"><h3>Sælgere</h3><p class="hint" style="margin:0">Klik på et ansigt for at sætte et profilbillede ind. Det bliver beskåret firkantet og gjort lille automatisk.</p>${S2.length?`<div class="lx-people">${S2.map(s=>`<div class="lx-person"><button type="button" class="lx-avbtn" data-pic="${esc(s.id)}" title="Skift billede af ${esc(s.navn)}">${lxAv(s,'xl')}<span class="lx-cam">${lxFoto(s.id)?'Skift':'+ Billede'}</span></button><div class="lx-pn"><b>${esc(s.navn)}</b><small>Saldo ${lnum(s.saldo)} · optjent ${lnum(s.optjent)} · brugt ${lnum(s.brugt)}</small><span class="lx-acts">${lxFoto(s.id)?`<button type="button" class="lx-link" data-rmpic="${esc(s.id)}">Fjern billede</button>`:''}<button type="button" class="lx-link lx-del" data-del="${esc(s.id)}">Slet sælger</button></span></div></div>`).join('')}</div>`:'<p class="hint" style="margin:0">Ingen har oprettet en profil endnu.</p>'}</div>
   <div class="lx-card"><h3>Optjeningsregler</h3><p class="hint" style="margin:0">Ret tallene i Google-arket under fanen Regler. Shoppens varer retter du under fanen Shop.</p>
    <table class="lx-tbl"><tbody>${Object.keys(A.regler).map(k=>`<tr><td>${esc(k.replace(/_/g,' '))}</td><td class="n">${lnum(A.regler[k])}</td></tr>`).join('')}</tbody></table>
    <div class="row" style="display:flex;gap:10px;flex-wrap:wrap"><button class="ghost" type="button" id="lx-are">Opdatér</button><button class="ghost" type="button" id="lx-aout">Log ud af admin</button></div></div>
@@ -228,7 +230,13 @@ function lxAdminPaint(){const A=LX.adm,el=$('lx-admin');if(!A)return;
   try{const j=await lapi('bonus',{admin:LX.admin,id:$('lx-bs').value,point:p,note:$('lx-bn').value});toast((p>0?'+':'')+lnum(p)+' point til '+j.mig.navn);const r=$('lx-bgo').getBoundingClientRect();burst(r.left+r.width/2,r.top,60);LX.adm=j;lxAdminPaint();if(LX.me&&LX.me.id===j.mig.id)lxSetMe(j.mig)}catch(e){toast(e.message)}};
  $('lx-are').onclick=async()=>{try{await lxAdmLoad();lxAdminPaint();toast('Opdateret')}catch(e){toast(e.message)}};
  $('lx-aout').onclick=()=>{LX.admin='';LX.adm=null;try{sessionStorage.removeItem('ts.ladm')}catch(e){}lxAdmin()}}
-$('lx-admin').addEventListener('click',async e=>{const pc=e.target.closest('[data-pic]');if(pc){lxPicFor=pc.dataset.pic;lxPicIn.click();return}const rp=e.target.closest('[data-rmpic]');if(rp){lxSetPic(rp.dataset.rmpic,'');return}const g=e.target.closest('[data-god],[data-gno]');if(g){const id=g.dataset.god||g.dataset.gno,afvis=!!g.dataset.gno;g.disabled=true;
+let lxDelArm='',lxDelT=0;
+async function lxDel(btn){const id=btn.dataset.del;
+ if(lxDelArm!==id){lxDelArm=id;btn.textContent='Tryk igen for at slette';btn.classList.add('arm');clearTimeout(lxDelT);lxDelT=setTimeout(()=>{lxDelArm='';btn.textContent='Slet sælger';btn.classList.remove('arm')},4000);return}
+ lxDelArm='';btn.disabled=true;btn.textContent='Sletter…';
+ try{const j=await lapi('slet',{admin:LX.admin,id});LX.adm=j;delete LX_F[id];store.set('ts.lfoto',LX_F);if(LX.board)LX.board.liste=LX.board.liste.filter(x=>x.id!==id);lxAdminPaint();toast(j.slettet+' er slettet')}
+ catch(e){toast(e.message);btn.disabled=false;btn.textContent='Slet sælger'}}
+$('lx-admin').addEventListener('click',async e=>{const dl=e.target.closest('[data-del]');if(dl){lxDel(dl);return}const pc=e.target.closest('[data-pic]');if(pc){lxPicFor=pc.dataset.pic;lxPicIn.click();return}const rp=e.target.closest('[data-rmpic]');if(rp){lxSetPic(rp.dataset.rmpic,'');return}const g=e.target.closest('[data-god],[data-gno]');if(g){const id=g.dataset.god||g.dataset.gno,afvis=!!g.dataset.gno;g.disabled=true;
   try{const j=await lapi('godkend',{admin:LX.admin,id,afvis});const r=g.getBoundingClientRect();if(!afvis){burst(r.left+r.width/2,r.top+r.height/2,90);sky.kick();sfx.whoosh()}
    toast(afvis?'Ordre '+j.ordre.ordrenr+' er afvist':j.ordre.point+' point til '+j.ordre.navn);LX.adm=j;lxAdminPaint();if(LX.me&&LX.me.id===j.ordre.saelger)lxRefreshMe()}catch(err){toast(err.message);g.disabled=false}return}
  const b=e.target.closest('[data-ok],[data-no]');if(!b)return;const kode=b.dataset.ok||b.dataset.no,afvis=!!b.dataset.no;
@@ -263,3 +271,5 @@ if(LX.api){if(!lxIsAdm()){plans=clone(DEFAULT_PLANS);el=DEFAULT_EL.map(d=>clone(
 
 /* ---- start ---- */
 lxPaintNav();lxRoute();if(LX.api)setTimeout(lxSync,view()?0:200)
+/* små rettelser kan lægges i patch.js uden at røre denne fil */
+if(location.protocol.startsWith('http'))document.head.appendChild(Object.assign(document.createElement('script'),{src:'patch.js?v='+Math.floor(Date.now()/6e4)}))
