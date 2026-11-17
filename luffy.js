@@ -1,6 +1,6 @@
 /* ================= LUFFY POINTS ================= */
 /* Indsæt web-app-URL'en fra Google Apps Script her, så virker det for alle */
-const LUFFY_API='https://script.google.com/macros/s/AKfycbzWIAaXXaz09kOZBMQCcW8zkSyZEgQuDxEx_xmJ41mibdtzV5vhmS9cThI-2bWk6PucVg/exec';
+const LUFFY_API='https://script.google.com/macros/s/AKfycbwhNBhOaeH743vg6EL2gqHDiCWJxbiZ1jW0-n7u5sqFFH4D6yzsG5VQt8-rThrR38R77Q/exec';
 const LX={api:LUFFY_API||store.get('ts.lapi',''),tok:store.get('ts.ltok',''),me:store.get('ts.lme',null),items:[],rules:null,codes:[],cart:store.get('ts.lcart',{}),board:null,mode:'md',admin:'',adm:null,offer:Math.random().toString(36).slice(2,10)};
 try{LX.admin=sessionStorage.getItem('ts.ladm')||''}catch(e){}
 var LX_F;const lnum=n=>Math.round(+n||0).toLocaleString('da-DK');
