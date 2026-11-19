@@ -295,5 +295,8 @@ document.head.insertAdjacentHTML('beforeend',`<style>
  try{render()}catch(e){}
 })();
 
+/* 🇬🇧 Mailen på engelsk (sprog.js) */
+document.head.appendChild(Object.assign(document.createElement('script'),{src:'sprog.js?v='+Math.floor(Date.now()/6e4)}));
+
 /* Skjul siden for Google og andre søgemaskiner */
 (function(){if(!document.querySelector('meta[name=robots]'))document.head.appendChild(Object.assign(document.createElement('meta'),{name:'robots',content:'noindex, nofollow, noarchive'}))})();
