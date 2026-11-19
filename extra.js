@@ -277,5 +277,23 @@ document.head.insertAdjacentHTML('beforeend',`<style>
  const lo2=lxOrds;lxOrds=function(){const r=lo2.apply(this,arguments);(LX.ords||[]).forEach((x,i)=>{if(!x.elnr)return;const v=document.querySelectorAll('#lx-ot .lx-cr .v')[i];if(v&&!v.dataset.el){v.dataset.el=1;v.insertAdjacentHTML('beforeend',' · el '+esc(x.elnr))}});return r};
 })();
 
+/* 🇪🇺 Hvad abonnementerne indeholder (fra Norlys Erhvervs side): fri tale/sms og data i EU */
+const INDHOLD={'corporate 5 gb':{eu:5},'corporate 10 gb':{eu:10},'corporate 50 gb':{eu:0},'corporate 100 gb':{eu:50},'corporate 1000 gb':{eu:73}};
+document.head.insertAdjacentHTML('beforeend',`<style>
+.pc-eu{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 2px}
+.pc-eu span{font-size:10.5px;font-weight:700;letter-spacing:.02em;padding:3px 7px;border-radius:999px;background:rgba(80,140,255,.1);border:1px solid rgba(80,140,255,.3);color:#B9D0FF;white-space:nowrap}
+.pc-eu span.t{background:rgba(120,220,170,.08);border-color:rgba(120,220,170,.3);color:#B8F0D2}
+</style>`);
+(function(){
+ const info=n=>INDHOLD[String(n||'').toLowerCase()];
+ const rp=renderProducts;renderProducts=function(){rp.apply(this,arguments);
+  plans.forEach(p=>{const x=info(p.name);if(!x)return;const c=document.querySelector(`#g-mobil .pc[data-pid="${CSS.escape(p.id)}"]`);if(!c||c.querySelector('.pc-eu'))return;
+   const m=c.querySelector('.meter')||c.querySelector('.pc-tag');m.insertAdjacentHTML('afterend',`<div class="pc-eu"><span class="t">Fri tale/sms</span>${x.eu?`<span>${x.eu} GB i EU</span>`:''}</div>`)})};
+ const mo=model;model=function(){const m=mo.apply(this,arguments);
+  m.groups.forEach(g=>g.lines.forEach(l=>{const x=info(l.name);if(x)l.name=l.name+' – inkl. fri tale/sms'+(x.eu?` og ${x.eu} GB data i EU`:'')}));
+  return m};
+ try{render()}catch(e){}
+})();
+
 /* Skjul siden for Google og andre søgemaskiner */
 (function(){if(!document.querySelector('meta[name=robots]'))document.head.appendChild(Object.assign(document.createElement('meta'),{name:'robots',content:'noindex, nofollow, noarchive'}))})();
