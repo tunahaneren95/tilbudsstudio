@@ -244,3 +244,35 @@ function lxSiuuu(){
   return m};
  try{renderMail()}catch(e){}
 })();
+
+/* ⚡ El-ordrenummer: sælgeren skriver ordrenummeret på elaftalen, så admin kan tjekke det */
+document.head.insertAdjacentHTML('beforeend',`<style>
+.lx-elnr{grid-column:1/-1;animation:lxElnr .35s cubic-bezier(.2,1.2,.4,1)}
+.lx-elnr input{border-color:rgba(255,210,74,.45)!important;background:rgba(255,210,74,.06)!important}
+.lx-elnr small{display:block;margin-top:6px;font-size:12px;color:var(--muted);font-weight:500;letter-spacing:0;text-transform:none}
+@keyframes lxElnr{from{opacity:0;transform:translateY(-6px)}}
+.lx-oa-el{display:inline-flex;align-items:center;gap:8px;margin-top:2px;padding:6px 10px;border-radius:10px;background:rgba(255,210,74,.08);border:1px solid rgba(255,210,74,.3);font-size:13px;color:#FFE79A}
+.lx-oa-el code{font-family:ui-monospace,Menlo,Consolas,monospace;color:#fff;font-weight:700;user-select:all}
+.lx-oa-el button{border:0;background:none;color:#FFE79A;cursor:pointer;font:inherit;font-size:12px;text-decoration:underline;padding:0}
+</style>`);
+(function(){
+ const visEl=()=>{const o=LX.of,el=document.getElementById('lo-el');if(!o||!el)return;let w=document.getElementById('lo-elw');
+  if(o.el>0&&!w){const box=el.closest('.f');box.insertAdjacentHTML('afterend',`<label class="f lx-elnr" id="lo-elw">El-ordrenr.<input id="lo-elnr" value="${esc(o.elnr||'')}" placeholder="Fx 7001234567" autocomplete="off" spellcheck="false"><small>Flere elaftaler? Skriv numrene med komma imellem.</small></label>`);
+   const i=document.getElementById('lo-elnr');i.addEventListener('input',()=>{o.elnr=i.value})}
+  else if(o.el<=0&&w)w.remove()};
+ const lo=lxOrder;lxOrder=function(){lo.apply(this,arguments);visEl();
+  document.querySelectorAll('#lx-order [data-el]').forEach(b=>b.addEventListener('click',()=>setTimeout(visEl,0)))};
+ try{if(document.getElementById('lo-el'))lxOrder()}catch(e){}
+ const send=lxSendOrder;lxSendOrder=async function(){const o=LX.of||{};
+  if(o.el>0&&String(o.elnr||'').trim().length<3){toast('Skriv ordrenummeret på elaftalen, så Tunahan kan tjekke det');const i=document.getElementById('lo-elnr');if(i){i.focus();i.closest('label').animate([{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'none'}],{duration:260})}return}
+  return send.apply(this,arguments)};
+ const kald=lapi;lapi=function(a,o){if(a==='ordre'&&LX.of&&+LX.of.el>0)o=Object.assign({},o,{elnr:String(LX.of.elnr||'').trim()});return kald(a,o)};
+ /* admin: vis el-ordrenumre på ordrer til godkendelse */
+ const ap=lxAdminPaint;lxAdminPaint=function(){const r=ap.apply(this,arguments);
+  ((LX.adm&&LX.adm.ordrer)||[]).forEach(o=>{if(!o.elnr)return;const b=document.querySelector(`#lx-admin [data-god="${CSS.escape(o.id)}"]`);const box=b&&b.closest('.lx-oa');if(!box||box.querySelector('.lx-oa-el'))return;
+   const m=box.querySelectorAll('.lx-oa-m');(m[m.length-1]||box).insertAdjacentHTML('afterend',`<div class="lx-oa-el">⚡ El-ordrenr. <code>${esc(o.elnr)}</code><button type="button" data-kop="${esc(o.elnr)}">Kopiér</button></div>`)});
+  return r};
+ document.addEventListener('click',e=>{const k=e.target.closest('[data-kop]');if(!k)return;navigator.clipboard.writeText(k.dataset.kop).then(()=>toast('El-ordrenummer kopieret'),()=>{})});
+ /* sælgerens egne ordrer */
+ const lo2=lxOrds;lxOrds=function(){const r=lo2.apply(this,arguments);(LX.ords||[]).forEach((x,i)=>{if(!x.elnr)return;const v=document.querySelectorAll('#lx-ot .lx-cr .v')[i];if(v&&!v.dataset.el){v.dataset.el=1;v.insertAdjacentHTML('beforeend',' · el '+esc(x.elnr))}});return r};
+})();

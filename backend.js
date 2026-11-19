@@ -111,9 +111,19 @@ const HANDLINGER = {
     const kv = Math.max(0, Math.round(Number(String(b.vaerdi || 0).replace(/\./g, '').replace(',', '.')) || 0));
     const el = Math.max(0, Math.min(50, Math.floor(Number(b.el) || 0)));
     if (data(ARK.ordrer).some(r => String(r[4]).toLowerCase() === nr.toLowerCase() && r[9] !== 'Afvist')) throw new Error('Ordre ' + nr + ' er allerede registreret');
+    /* el-ordrenumre, så admin kan tjekke elsalget */
+    let elnr = '';
+    if (el > 0) {
+      elnr = ren(b.elnr, 120).replace(/\s*[,;]\s*/g, ', ').trim();
+      if (elnr.length < 3) throw new Error('Skriv ordrenummeret på elaftalen');
+      if (!/^[A-Za-z0-9 ._\/,-]{3,120}$/.test(elnr)) throw new Error('El-ordrenummeret må kun indeholde tal, bogstaver og bindestreg');
+      const nye = elnr.toLowerCase().split(/[\s,]+/).filter(Boolean);
+      const brugt = data(ARK.ordrer).find(r => r[9] !== 'Afvist' && String(r[11] || '').toLowerCase().split(/[\s,]+/).some(x => x && nye.indexOf(x) >= 0));
+      if (brugt) throw new Error('El-ordre ' + nye.find(x => String(brugt[11]).toLowerCase().split(/[\s,]+/).indexOf(x) >= 0) + ' er allerede registreret');
+    }
     const p = beregn(kv, el);
     const id = 'O' + Utilities.getUuid().slice(0, 8);
-    ark(ARK.ordrer).appendRow([id, nu(), s[0], s[1], nr, ren(b.kunde, 60), Math.min(kv, 10000000), el, p, 'Afventer', '']); MEMO = {};
+    ark(ARK.ordrer).appendRow([id, nu(), s[0], s[1], nr, ren(b.kunde, 60), Math.min(kv, 10000000), el, p, 'Afventer', '', elnr]); MEMO = {};
     return { ok: true, point: p, mig: profil(s[0]), ordrer: mineOrdrer(s[0]) };
   },
 
@@ -358,7 +368,7 @@ function profil(id) {
 }
 function mineOrdrer(id) { return data(ARK.ordrer).filter(r => r[2] === id).map(ro).reverse().slice(0, 20); }
 function ro(r) {
-  return { id: r[0], tid: r[1] ? new Date(r[1]).toISOString() : '', saelger: r[2], navn: String(r[3]), ordrenr: String(r[4]), kunde: String(r[5]), vaerdi: Number(r[6]) || 0, el: Number(r[7]) || 0, point: Number(r[8]) || 0, status: String(r[9]) };
+  return { id: r[0], tid: r[1] ? new Date(r[1]).toISOString() : '', saelger: r[2], navn: String(r[3]), ordrenr: String(r[4]), kunde: String(r[5]), vaerdi: Number(r[6]) || 0, el: Number(r[7]) || 0, point: Number(r[8]) || 0, status: String(r[9]), elnr: String(r[11] || '') };
 }
 function beregn(kv, el) {
   const R = regler();
@@ -385,7 +395,7 @@ function nyKode() {
 /* ---------- Opret ark første gang ---------- */
 function sikrArk() {
   const c = CacheService.getScriptCache();
-  if (c.get('ark_ok2')) return;
+  if (c.get('ark_ok3')) return;
   const ss = SpreadsheetApp.getActive();
   const lav = (navn, hoved, raekker) => {
     let sh = ss.getSheetByName(navn);
@@ -398,12 +408,14 @@ function sikrArk() {
   lav(ARK.saelgere, ['ID', 'Navn', 'PIN (krypteret)', 'Token', 'Oprettet', 'Aktiv (ja/nej)', 'Billede', 'Billede-version']);
   lav(ARK.log, ['Tid', 'Sælger-ID', 'Navn', 'Point', 'Type', 'Note', 'Reference']);
   lav(ARK.shop, ['ID', 'Navn', 'Beskrivelse', 'Pris (point)', 'Ikon', 'Aktiv (ja/nej)'], STD_SHOP);
-  lav(ARK.ordrer, ['ID', 'Tid', 'Sælger-ID', 'Navn', 'Ordrenr.', 'Kunde', 'Kontraktværdi (kr. ekskl. moms)', 'Elaftaler', 'Point', 'Status', 'Behandlet']);
+  lav(ARK.ordrer, ['ID', 'Tid', 'Sælger-ID', 'Navn', 'Ordrenr.', 'Kunde', 'Kontraktværdi (kr. ekskl. moms)', 'Elaftaler', 'Point', 'Status', 'Behandlet', 'El-ordrenr.']);
   lav(ARK.koder, ['Kode', 'Tid', 'Sælger-ID', 'Navn', 'Varer', 'Point', 'Status', 'Indløst']);
   lav(ARK.regler, ['Regel', 'Point', 'Forklaring'], STD_REGLER);
   lav(ARK.priser, ['Kategori', 'Abonnement', 'Listepris/md.', 'Binding', 'Kampagnepris/md.', 'Kampagne udløber', 'Maks. rabat/md.', 'Telefonrabat nyt', 'Telefonrabat forl.']);
   lav(ARK.el, ['Produkt', 'Elpris øre/kWh', 'Transport og afgifter øre/kWh', 'Tillæg øre/kWh', 'Abonnement kr./md.', 'Gælder for (måned)']);
-  c.put('ark_ok2', '1', 21600);
+  const so = ss.getSheetByName(ARK.ordrer);
+  if (so && !so.getRange(1, 12).getValue()) so.getRange(1, 12).setValue('El-ordrenr.').setFontWeight('bold').setBackground('#ED0812').setFontColor('#ffffff');
+  c.put('ark_ok3', '1', 21600);
 }
 
 /** Kør denne én gang fra editoren, hvis du vil se arkene med det samme. */
