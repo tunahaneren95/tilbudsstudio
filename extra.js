@@ -66,24 +66,64 @@ document.head.appendChild(Object.assign(document.createElement('script'),{src:'k
 /* Ingen "Klar til Outlook"-banner når man kopierer */
 document.head.insertAdjacentHTML('beforeend','<style>#banner{display:none!important}</style>');
 
-/* Touchpoint Bruger (49 kr.) i omstillingssektionen */
+/* Ekstra produkter: Touchpoint Bruger, roamingpakker, Fri tale DK til EU og Ekstra Data kort.
+   Findes de ikke i Google-arket endnu, lægges de ind, indtil admin trykker "Gem for alle".
+   Pris 0 = "mangler pris": kun admin ser kortet, indtil prisen er skrevet ind i arket. */
+const EKSTRA=[
+ {id:'tp-bruger',cat:'tp',name:'Touchpoint Bruger',list:49,b:0,efter:/touchpoint menu/i},
+ {id:'ex-data',cat:'till',name:'Ekstra Data kort',list:49,b:0,info:'Datadeling · ekstra SIM',mail:'Ekstra Data kort (datadeling)'},
+ {id:'rw-20',cat:'till',name:'Roaming World 20 GB',list:0,b:12,info:'20 GB + 15 timers tale i 92 lande',mail:'Roaming World 20 GB (20 GB data og 15 timers tale uden for EU)'},
+ {id:'rw-flex',cat:'till',name:'Roaming World Flex 20 GB',list:0,b:0,info:'20 GB + 15 timers tale · uden binding',mail:'Roaming World Flex 20 GB (20 GB data og 15 timers tale uden for EU)'},
+ {id:'rw-5',cat:'till',name:'Roaming World 5 GB',list:0,b:12,info:'5 GB + 2 timers tale i 92 lande',mail:'Roaming World 5 GB (5 GB data og 2 timers tale uden for EU)'},
+ {id:'eu-tale',cat:'till',name:'Fri tale DK til EU',list:0,b:0,info:'Fri tale fra Danmark til EU',mail:'Fri tale fra Danmark til EU'}
+];
+const erTill=n=>/roaming|tale dk til eu|ekstra data/i.test(n||'');
 (function(){
- const NY={id:'tp-bruger',cat:'tp',name:'Touchpoint Bruger',list:49,trin:[{binding:0,camp:0,max:0,ny:0,forl:0}]};
- if(!DEFAULT_PLANS.some(p=>p.id==='tp-bruger')){const i=DEFAULT_PLANS.findIndex(p=>p.id==='tp-menu');DEFAULT_PLANS.splice(i<0?DEFAULT_PLANS.length:i+1,0,JSON.parse(JSON.stringify(NY)))}
- const harDen=l=>l.some(p=>/touchpoint bruger/i.test(p.name));
- function sikr(){if(harDen(plans))return false;let i=plans.findIndex(p=>/touchpoint menu/i.test(p.name));if(i<0)i=plans.map(p=>p.cat).lastIndexOf('tp');plans.splice(i<0?plans.length:i+1,0,JSON.parse(JSON.stringify(NY)));return true}
- /* findes den ikke i Google-arket endnu, lægges den ind, indtil admin trykker "Gem for alle" */
- function medBruger(P){
+ const mk=x=>({id:x.id,cat:x.cat,name:x.name,list:x.list,trin:[{binding:x.b,camp:0,max:0,ny:0,forl:0}]});
+ EKSTRA.forEach(x=>{if(!DEFAULT_PLANS.some(p=>p.id===x.id))DEFAULT_PLANS.push(mk(x))});
+ /* kategori: arket kender kun Mobil/MBB/5G/Omstilling, så tillæg genkendes på navnet */
+ const pa=parse;parse=function(txt){const r=pa(txt);if(r&&r.kind==='plans')r.list.forEach(p=>{if(erTill(p.name))p.cat='till'});return r};
+ const tt=toTSV;toTSV=function(){return tt().split('\n').map(l=>{const c=l.split('\t');if(erTill(c[1]))c[0]='Tillæg';return c.join('\t')}).join('\n')};
+ function sikr(){let ch=false;EKSTRA.forEach(x=>{if(plans.some(p=>p.name.toLowerCase()===x.name.toLowerCase()))return;
+  let i=x.efter?plans.findIndex(p=>x.efter.test(p.name)):-1;if(i<0&&x.cat==='tp')i=plans.map(p=>p.cat).lastIndexOf('tp');
+  plans.splice(i<0?plans.length:i+1,0,mk(x));ch=true});return ch}
+ function medEkstra(P){
   if(!P||!P.plan||P.plan.length<2)return P;
-  if(P.plan.some(r=>/touchpoint bruger/i.test(r.join(' '))))return P;
-  const h=P.plan[0].map(String),ix=re=>h.findIndex(c=>re.test(c)),row=h.map(()=>'');
-  const at=P.plan.findIndex(r=>/touchpoint menu/i.test(r.join(' ')));
-  const set=(re,v)=>{const i=ix(re);if(i>=0)row[i]=v};
-  set(/kategori/i,at>0?P.plan[at][ix(/kategori/i)]:'Omstilling');set(/abonnement/i,'Touchpoint Bruger');set(/liste/i,'49');set(/binding/i,'0');set(/udløb/i,'Nej');
-  const plan=P.plan.slice();plan.splice(at>0?at+1:plan.length,0,row);return Object.assign({},P,{plan});
+  const h=P.plan[0].map(String),ix=re=>h.findIndex(c=>re.test(c)),plan=P.plan.slice();
+  EKSTRA.forEach(x=>{if(plan.some(r=>String(r[ix(/abonnement/i)]||'').toLowerCase()===x.name.toLowerCase()))return;
+   const row=h.map(()=>''),set=(re,v)=>{const i=ix(re);if(i>=0)row[i]=v};
+   const at=x.efter?plan.findIndex(r=>x.efter.test(r.join(' '))):-1;
+   set(/kategori/i,x.cat==='tp'?(at>0?plan[at][ix(/kategori/i)]:'Omstilling'):'Tillæg');set(/abonnement/i,x.name);set(/liste/i,x.list?String(x.list):'');set(/binding/i,String(x.b));set(/udløb/i,'Nej');
+   plan.splice(at>0?at+1:plan.length,0,row)});
+  return Object.assign({},P,{plan});
  }
- const ap=lxApplyPrices;lxApplyPrices=function(P){return ap(medBruger(P))};
- if(sikr())try{render()}catch(e){}
+ const ap=lxApplyPrices;lxApplyPrices=function(P){return ap(medEkstra(P))};
+
+ /* egen sektion: Roaming og tillæg */
+ ICO.till='<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17Zm5.9 7.7h-2.6a13 13 0 0 0-1.1-4.9 6.9 6.9 0 0 1 3.7 4.9ZM10 3.2c.8 1 1.6 3 1.8 6H8.2c.2-3 1-5 1.8-6ZM7.8 4.3a13 13 0 0 0-1.1 4.9H4.1a6.9 6.9 0 0 1 3.7-4.9ZM4.1 10.8h2.6c.1 1.9.5 3.6 1.1 4.9a6.9 6.9 0 0 1-3.7-4.9Zm5.9 6c-.8-1-1.6-3-1.8-6h3.6c-.2 3-1 5-1.8 6Zm2.2-1.1c.6-1.3 1-3 1.1-4.9h2.6a6.9 6.9 0 0 1-3.7 4.9Z"/></svg>';
+ document.head.insertAdjacentHTML('beforeend',`<style>
+ #g-till{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+ .pc[data-pid].till .ico{background:rgba(120,170,255,.12)}.pc.till .ico svg{fill:#9DC2FF}.pc.till.on .ico{background:var(--red)}.pc.till.on .ico svg{fill:#fff}
+ .pc.till .pc-tag{font-family:var(--f);font-weight:800;font-size:15px;letter-spacing:-.01em;line-height:1.2}
+ .pc.till .tl-info{font-size:12px;color:var(--muted);line-height:1.35;min-height:32px}
+ .pc.till.off .pc-from.bad{color:var(--warn,#FFB347)}
+ </style>`);
+ const g=document.getElementById('g-tp');
+ if(g&&!document.getElementById('g-till'))g.insertAdjacentHTML('afterend','<div class="sub-h" id="h-till">Roaming og tillæg</div><div class="grid" id="g-till"></div>');
+ const INFO=Object.fromEntries(EKSTRA.map(x=>[x.name.toLowerCase(),x.info||'']));
+ const erAdmin=()=>{try{return !!LX.admin}catch(e){return false}};
+ const rp=renderProducts;renderProducts=function(){rp.apply(this,arguments);
+  const gt=document.getElementById('g-till');if(!gt)return;
+  const l=plans.filter(p=>p.cat==='till'&&(+p.list>0||erAdmin()||linesOf(p.id).length));
+  gt.innerHTML=l.map(p=>card(p).replace('class="pc','class="pc till')
+   .replace(/<span class="cat">[^<]*<\/span>/,'<span class="cat">Tillæg</span>')
+   .replace(/<div class="pc-tag">[^<]*<\/div>/,`<div class="pc-tag">${esc(p.name)}</div>`)
+   .replace(/<div class="meter[^"]*" aria-hidden="true"><i[^>]*><\/i><\/div>/,`<div class="tl-info">${esc(INFO[p.name.toLowerCase()]||'')}</div>`)).join('');
+  document.getElementById('h-till').hidden=!l.length;
+ };
+ sikr();try{render()}catch(e){}
+ /* admin-login viser kort uden pris */
+ let varAdm=erAdmin();setInterval(()=>{if(erAdmin()!==varAdm){varAdm=erAdmin();try{render()}catch(e){}}},1500);
 })();
 
 /* 💰 Valutaen hedder Berries (One Piece) */
@@ -188,12 +228,16 @@ function lxSiuuu(){
 
 /* Forlængelse: kort intro som kollegerne ønsker, ental/flertal, ingen telefon-linje */
 (function(){
- const antal=()=>{try{return active().reduce((n,{it})=>n+(+it.ny||0)+(+it.forl||0),0)}catch(e){return 1}};
+ const antal=()=>{try{return active().filter(({p})=>!erTill(p.name)).reduce((n,{it})=>n+(+it.ny||0)+(+it.forl||0),0)}catch(e){return 1}};
  INTRO.forl=()=>`Tak for en god samtale. Som lovet sender jeg her tilbuddet på at forlænge ${antal()>1?'dine abonnementer':'dit abonnement'}.`;
  const mo=model;model=function(){const m=mo.apply(this,arguments);
   if(S.situation==='forl'){m.phones='';
    /* alt står under "Nye abonnementer", som i kollegernes skabelon */
    if(m.groups.length){const alle=m.groups.flatMap(g=>g.lines);m.groups=[{label:'NYE ABONNEMENTER',lines:alle}]}}
+  /* roaming og tillæg i deres egen gruppe */
+  const MN=Object.fromEntries(EKSTRA.filter(x=>x.mail).map(x=>[x.name,x.mail]));
+  const till=[];m.groups.forEach(g=>{g.lines=g.lines.filter(l=>{if(erTill(l.name)){till.push(Object.assign({},l,{name:MN[l.name]||l.name,price:l.price.replace(/ (?:ved|i) (\d+) måneder(?:s binding)?$/,' – minimum $1 måneder')}));return false}return true})});
+  m.groups=m.groups.filter(g=>g.lines.length);if(till.length)m.groups.push({label:'TILLÆG',lines:till});
   /* samme opsætning på alle abonnementer: "x kr./md. i 36 måneder" */
   m.groups.forEach(g=>g.lines.forEach(l=>{l.price=l.price.replace(/ ved (\d+) måneders binding$/,' i $1 måneder')}));
   return m};
