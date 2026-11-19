@@ -72,10 +72,10 @@ document.head.insertAdjacentHTML('beforeend','<style>#banner{display:none!import
 const EKSTRA=[
  {id:'tp-bruger',cat:'tp',name:'Touchpoint Bruger',list:49,b:0,efter:/touchpoint menu/i},
  {id:'ex-data',cat:'till',name:'Ekstra Data kort',list:49,b:0,info:'Datadeling · ekstra SIM',mail:'Ekstra Data kort (datadeling)'},
- {id:'rw-20',cat:'till',name:'Roaming World 20 GB',list:0,b:12,info:'20 GB + 15 timers tale i 92 lande',mail:'Roaming World 20 GB (20 GB data og 15 timers tale uden for EU)'},
- {id:'rw-flex',cat:'till',name:'Roaming World Flex 20 GB',list:0,b:0,info:'20 GB + 15 timers tale · uden binding',mail:'Roaming World Flex 20 GB (20 GB data og 15 timers tale uden for EU)'},
+ {id:'rw-20',cat:'till',name:'Roaming World 20 GB',list:69,b:12,info:'20 GB + 15 timers tale i 92 lande',mail:'Roaming World 20 GB (20 GB data og 15 timers tale uden for EU)'},
+ {id:'rw-flex',cat:'till',name:'Roaming World Flex 20 GB',list:299,b:0,min:'minimum 30 dage',info:'20 GB + 15 timers tale · min. 30 dage',mail:'Roaming World Flex 20 GB (20 GB data og 15 timers tale uden for EU)'},
  {id:'rw-5',cat:'till',name:'Roaming World 5 GB',list:0,b:12,info:'5 GB + 2 timers tale i 92 lande',mail:'Roaming World 5 GB (5 GB data og 2 timers tale uden for EU)'},
- {id:'eu-tale',cat:'till',name:'Fri tale DK til EU',list:0,b:0,info:'Fri tale fra Danmark til EU',mail:'Fri tale fra Danmark til EU'}
+ {id:'eu-tale',cat:'till',name:'Fri tale DK til EU',list:19,b:0,info:'Fri tale fra Danmark til EU',mail:'Fri tale fra Danmark til EU'}
 ];
 const erTill=n=>/roaming|tale dk til eu|ekstra data/i.test(n||'');
 (function(){
@@ -84,13 +84,14 @@ const erTill=n=>/roaming|tale dk til eu|ekstra data/i.test(n||'');
  /* kategori: arket kender kun Mobil/MBB/5G/Omstilling, så tillæg genkendes på navnet */
  const pa=parse;parse=function(txt){const r=pa(txt);if(r&&r.kind==='plans')r.list.forEach(p=>{if(erTill(p.name))p.cat='till'});return r};
  const tt=toTSV;toTSV=function(){return tt().split('\n').map(l=>{const c=l.split('\t');if(erTill(c[1]))c[0]='Tillæg';return c.join('\t')}).join('\n')};
- function sikr(){let ch=false;EKSTRA.forEach(x=>{if(plans.some(p=>p.name.toLowerCase()===x.name.toLowerCase()))return;
+ function sikr(){let ch=false;EKSTRA.forEach(x=>{const f=plans.find(p=>p.name.toLowerCase()===x.name.toLowerCase());if(f){if(!(+f.list>0)&&x.list){f.list=x.list;ch=true}return}
   let i=x.efter?plans.findIndex(p=>x.efter.test(p.name)):-1;if(i<0&&x.cat==='tp')i=plans.map(p=>p.cat).lastIndexOf('tp');
   plans.splice(i<0?plans.length:i+1,0,mk(x));ch=true});return ch}
  function medEkstra(P){
   if(!P||!P.plan||P.plan.length<2)return P;
   const h=P.plan[0].map(String),ix=re=>h.findIndex(c=>re.test(c)),plan=P.plan.slice();
-  EKSTRA.forEach(x=>{if(plan.some(r=>String(r[ix(/abonnement/i)]||'').toLowerCase()===x.name.toLowerCase()))return;
+  EKSTRA.forEach(x=>{const fi=plan.findIndex(r=>String(r[ix(/abonnement/i)]||'').toLowerCase()===x.name.toLowerCase());
+   if(fi>=0){const li=ix(/liste/i);if(li>=0&&x.list&&!(+String(plan[fi][li]||'').replace(',','.')>0)){plan[fi]=plan[fi].slice();plan[fi][li]=String(x.list)}return}
    const row=h.map(()=>''),set=(re,v)=>{const i=ix(re);if(i>=0)row[i]=v};
    const at=x.efter?plan.findIndex(r=>x.efter.test(r.join(' '))):-1;
    set(/kategori/i,x.cat==='tp'?(at>0?plan[at][ix(/kategori/i)]:'Omstilling'):'Tillæg');set(/abonnement/i,x.name);set(/liste/i,x.list?String(x.list):'');set(/binding/i,String(x.b));set(/udløb/i,'Nej');
@@ -235,8 +236,8 @@ function lxSiuuu(){
    /* alt står under "Nye abonnementer", som i kollegernes skabelon */
    if(m.groups.length){const alle=m.groups.flatMap(g=>g.lines);m.groups=[{label:'NYE ABONNEMENTER',lines:alle}]}}
   /* roaming og tillæg i deres egen gruppe */
-  const MN=Object.fromEntries(EKSTRA.filter(x=>x.mail).map(x=>[x.name,x.mail]));
-  const till=[];m.groups.forEach(g=>{g.lines=g.lines.filter(l=>{if(erTill(l.name)){till.push(Object.assign({},l,{name:MN[l.name]||l.name,price:l.price.replace(/ (?:ved|i) (\d+) måneder(?:s binding)?$/,' – minimum $1 måneder')}));return false}return true})});
+  const MN=Object.fromEntries(EKSTRA.filter(x=>x.mail).map(x=>[x.name,x.mail])),MIN=Object.fromEntries(EKSTRA.filter(x=>x.min).map(x=>[x.name,x.min]));
+  const till=[];m.groups.forEach(g=>{g.lines=g.lines.filter(l=>{if(erTill(l.name)){till.push(Object.assign({},l,{name:MN[l.name]||l.name,price:l.price.replace(/ (?:ved|i) (\d+) måneder(?:s binding)?$/,' – minimum $1 måneder').replace(/ – ingen binding$/,MIN[l.name]?' – '+MIN[l.name]:' – ingen binding')}));return false}return true})});
   m.groups=m.groups.filter(g=>g.lines.length);if(till.length)m.groups.push({label:'TILLÆG',lines:till});
   /* samme opsætning på alle abonnementer: "x kr./md. i 36 måneder" */
   m.groups.forEach(g=>g.lines.forEach(l=>{l.price=l.price.replace(/ ved (\d+) måneders binding$/,' i $1 måneder')}));
