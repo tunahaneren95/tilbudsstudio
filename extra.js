@@ -276,3 +276,6 @@ document.head.insertAdjacentHTML('beforeend',`<style>
  /* sælgerens egne ordrer */
  const lo2=lxOrds;lxOrds=function(){const r=lo2.apply(this,arguments);(LX.ords||[]).forEach((x,i)=>{if(!x.elnr)return;const v=document.querySelectorAll('#lx-ot .lx-cr .v')[i];if(v&&!v.dataset.el){v.dataset.el=1;v.insertAdjacentHTML('beforeend',' · el '+esc(x.elnr))}});return r};
 })();
+
+/* Skjul siden for Google og andre søgemaskiner */
+(function(){if(!document.querySelector('meta[name=robots]'))document.head.appendChild(Object.assign(document.createElement('meta'),{name:'robots',content:'noindex, nofollow, noarchive'}))})();
